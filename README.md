@@ -1,0 +1,2 @@
+# konter
+transaksi sendiri otomatis
