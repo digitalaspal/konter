@@ -66,31 +66,42 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycOunJI7aY36KQKjse75YAybZWnEmv-28ksEnHWNdoPHwR_wPlyHc5eWSXvJcou0UG/exec"; 
     let orderId = "";
 
-    function prosesBeli() {
-      let nomor = document.getElementById("nomor").value;
-      let paket = document.getElementById("paket").value;
+  function prosesBeli() {
+  let nomor = document.getElementById("nomor").value;
+  let paket = document.getElementById("paket").value;
 
-      if (!nomor) { 
-        alert("Nomor HP harus diisi!"); 
-        return; 
-      }
+  if (!nomor) { 
+    alert("Nomor HP harus diisi!"); 
+    return; 
+  }
 
-      fetch(`${SCRIPT_URL}?action=create&nomor=${nomor}&paket=${paket}`)
-        .then(res => res.json())
-        .then(data => {
-          orderId = data.id;
-          
-          document.getElementById("sec-form").classList.add("hidden");
-          document.getElementById("sec-proses").classList.remove("hidden");
+  // --- CEK & KUNCI TOMBOL AGAR TIDAK BISA DIKLIK 2 KALI ---
+  let btn = document.querySelector("button[onclick='prosesBeli()']");
+  if (btn.disabled) return; // Hentikan jika tombol sudah dalam keadaan mati
 
-          setInterval(cekStatus, 3000);
-        })
-        .catch(err => {
-          // Jika URL Apps Script belum diisi, layar tetap berpindah untuk tes tampilan
-          document.getElementById("sec-form").classList.add("hidden");
-          document.getElementById("sec-proses").classList.remove("hidden");
-        });
-    }
+  btn.disabled = true; // Matikan tombol
+  btn.style.opacity = "0.6"; // Buat tampilan agak redup
+  btn.innerText = "MENGIRIM PESANAN..."; // Ubah teks tombol
+  // --------------------------------------------------------
+
+  fetch(`${SCRIPT_URL}?action=create&nomor=${nomor}&paket=${paket}`)
+    .then(res => res.json())
+    .then(data => {
+      orderId = data.id;
+      
+      document.getElementById("sec-form").classList.add("hidden");
+      document.getElementById("sec-proses").classList.remove("hidden");
+
+      setInterval(cekStatus, 3000);
+    })
+    .catch(err => {
+      // Jika terjadi gangguan jaringan, kembalikan tombol ke keadaan semula
+      alert("Gagal terhubung ke sistem. Silakan coba lagi.");
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.innerText = "BELI SEKARANG";
+    });
+}
 
     function cekStatus() {
       if(!orderId) return;
