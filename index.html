@@ -38,7 +38,6 @@
     </div>
 
     <label for="nomor">Nomor HP Tujuan:</label>
-    <!-- Ditambahkan oninput untuk merapikan nomor secara real-time saat diketik -->
     <input type="text" id="nomor" placeholder="Contoh: 08123456789" oninput="formatNomorRealtime(this)">
 
     <label for="paket">Pilih Paket Data:</label>
@@ -88,19 +87,14 @@
     let activePaket = "";
     let timerCek = null;
 
-    // FUNGSI RAPIKAN NOMOR HP LANGSUNG SAAT KETIK (REAL-TIME)
+    // FUNGSI RAPIKAN NOMOR HP LANGSUNG SAAT KETIK
     function formatNomorRealtime(input) {
       let val = input.value;
-      
-      // 1. Buang semua karakter selain angka
       let bersih = val.replace(/[^0-9]/g, "");
       
-      // 2. Jika pembeli mengetik diawali '62', ganti menjadi '0'
       if (bersih.startsWith("62")) {
         bersih = "0" + bersih.substring(2);
-      } 
-      // 3. Jika pembeli mengetik diawali '8', tambahkan '0' di depannya
-      else if (bersih.startsWith("8")) {
+      } else if (bersih.startsWith("8")) {
         bersih = "0" + bersih;
       }
 
@@ -120,6 +114,13 @@
               let opt = document.createElement("option");
               opt.value = item;
               opt.innerText = item;
+              
+              // JIKA ADA KATA "HABIS", NONTANFAKAN OPSI TERSEBUT
+              if (item.toUpperCase().includes("HABIS")) {
+                opt.disabled = true;
+                opt.style.color = "#dc3545"; // Warna Merah
+              }
+              
               selectPaket.appendChild(opt);
             });
           } else {
@@ -146,6 +147,11 @@
         return;
       }
 
+      if (paketInput.toUpperCase().includes("HABIS")) {
+        alert("Maaf, paket data ini sedang HABIS!");
+        return;
+      }
+
       let btn = document.querySelector("button[onclick='prosesBeli()']");
       if (btn.disabled) return;
 
@@ -164,11 +170,9 @@
           activeNomor = nomorInput;
           activePaket = paketInput;
           
-          // TAMPILKAN LAYAR PROSES
           document.getElementById("sec-form").classList.add("hidden");
           document.getElementById("sec-proses").classList.remove("hidden");
 
-          // JALANKAN CEK STATUS BERKALA
           timerCek = setInterval(cekStatusKetat, 3000);
         } else {
           throw new Error("Gagal menyimpan transaksi");
@@ -195,12 +199,10 @@
         if (data && data.status === "SUCCESS") {
           clearInterval(timerCek);
           
-          // ISI RINCIAN DENGAN DATA PEMBELI
           document.getElementById("res-id").innerText = activeOrderId;
           document.getElementById("res-nomor").innerText = activeNomor;
           document.getElementById("res-paket").innerText = activePaket;
 
-          // PINDAH KAN LAYAR KE SUKSES
           document.getElementById("sec-proses").classList.add("hidden");
           document.getElementById("sec-sukses").classList.remove("hidden");
         }
