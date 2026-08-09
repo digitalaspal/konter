@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konter Digital</title>
+  <style>
+    body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 40px; background: #f0f2f5; }
+    .card { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; box-sizing: border-box; }
+    input, select { border: 1px solid #ccc; }
+    button { background: #25d366; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .hidden { display: none; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #25d366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- LAYER 1: FORM PEMBELIAN -->
+  <div class="card" id="sec-form">
+    <h3>📦 Beli Paket Data</h3>
+    <input type="number" id="nomor" placeholder="Nomor HP Tujuan">
+    <select id="paket">
+      <option value="Data 5GB - Rp 10rb">Data 5GB - Rp 10rb</option>
+      <option value="Data 10GB - Rp 20rb">Data 10GB - Rp 20rb</option>
+    </select>
+    <button onclick="prosesBeli()">BELI SEKARANG</button>
+  </div>
+
+  <!-- LAYER 2: DISPLAY PROSES (HP Konter tidak buka WA) -->
+  <div class="card hidden" id="sec-proses">
+    <h3>⏳ Sedang Diproses</h3>
+    <div class="spinner"></div>
+    <p>Data telah terkirim ke Admin.</p>
+    <p style="font-size: 13px; color: #666;">Mohon tunggu, status halaman ini akan otomatis berganti setelah paket berhasil diisi.</p>
+  </div>
+
+  <!-- LAYER 3: DISPLAY SUKSES -->
+  <div class="card hidden" id="sec-sukses">
+    <h1 style="color: #25d366; margin-bottom: 5px;">✅ BERHASIL!</h1>
+    <p>Paket data sudah aktif di nomor Anda.</p>
+    <button onclick="location.reload()" style="background: #007bff;">Selesai / Transaksi Baru</button>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "URL_WEB_APP_ANDA"; 
+    let orderId = "";
+
+    function prosesBeli() {
+      let nomor = document.getElementById("nomor").value;
+      let paket = document.getElementById("paket").value;
+
+      if (!nomor) { alert("Nomor HP harus diisi!"); return; }
+
+      // Kirim data ke server (tanpa buka aplikasi WA)
+      fetch(`${SCRIPT_URL}?action=create&nomor=${nomor}&paket=${paket}`)
+        .then(res => res.json())
+        .then(data => {
+          orderId = data.id;
+          
+          // Sembunyikan Form, Tampilkan Layar Proses
+          document.getElementById("sec-form").classList.add("hidden");
+          document.getElementById("sec-proses").classList.remove("hidden");
+
+          // Pantau status dari server tiap 3 detik
+          setInterval(cekStatus, 3000);
+        });
+    }
+
+    function cekStatus() {
+      fetch(`${SCRIPT_URL}?action=check&id=${orderId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "SUCCESS") {
+            document.getElementById("sec-proses").classList.add("hidden");
+            document.getElementById("sec-sukses").classList.remove("hidden");
+          }
+        });
+    }
+  </script>
+</body>
+</html>
