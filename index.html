@@ -23,7 +23,7 @@
 </head>
 <body>
 
-  <!-- LAYER 1: FORM PEMBELIAN (UTAMA) -->
+  <!-- LAYER 1: FORM PEMBELIAN -->
   <div class="card" id="sec-form">
     <div class="header-box">
       <h2>⚡ Isi Paket Data Mandiri</h2>
@@ -41,7 +41,7 @@
     <button onclick="prosesBeli()">BELI SEKARANG</button>
   </div>
 
-  <!-- LAYER 2: DISPLAY PROSES -->
+  <!-- LAYER 2: DISPLAY PROSES (DITAHAN DI SINI) -->
   <div class="card hidden" id="sec-proses">
     <h3>⏳ Sedang Diproses</h3>
     <div class="spinner"></div>
@@ -59,9 +59,9 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycOunJI7aY36KQKjse75YAybZWnEmv-28ksEnHWNdoPHwR_wPlyHc5eWSXvJcou0UG/exec"; 
     let activeOrderId = "";
-    let checkTimer = null;
+    let timerCek = null;
 
-    // AMBIL DAFTAR PAKET
+    // AMBIL DAFTAR PAKET SAAT HALAMAN DIBUKA
     window.onload = function() {
       fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
@@ -119,16 +119,16 @@
       .then(res => res.json())
       .then(data => {
         if (data.result === "success" && data.id) {
-          activeOrderId = data.id; // TAHAN ID TRANSAKSI
+          activeOrderId = data.id; // SIMPAN ID UNIK
           
-          // PINDAH KE PROSES
+          // PINDAH KAN TAMPILAN KE "SEDANG DIPROSES"
           document.getElementById("sec-form").classList.add("hidden");
           document.getElementById("sec-proses").classList.remove("hidden");
 
-          // CEK SETIAP 3 DETIK
-          checkTimer = setInterval(cekStatus, 3000);
+          // JALANKAN PENGECEKAN KETAT TIAP 3 DETIK
+          timerCek = setInterval(cekStatusKetat, 3000);
         } else {
-          throw new Error("Gagal membuat transaksi");
+          throw new Error("Gagal menyimpan transaksi");
         }
       })
       .catch(err => {
@@ -140,7 +140,7 @@
       });
     }
 
-    function cekStatus() {
+    function cekStatusKetat() {
       if (!activeOrderId) return;
 
       fetch(`${SCRIPT_URL}?action=check&id=${encodeURIComponent(activeOrderId)}`, {
@@ -149,14 +149,14 @@
       })
       .then(res => res.json())
       .then(data => {
-        // HANYA PINDAH JIKA RESPONS BENAR-BENAR "SUCCESS" (EXPLICIT EQUALITY)
-        if (String(data.status).toUpperCase() === "SUCCESS") {
-          clearInterval(checkTimer);
+        // HANYA JIKA RESPON DARI SHEET ADALAH PERSIS "SUCCESS"
+        if (data && data.status === "SUCCESS") {
+          clearInterval(timerCek);
           document.getElementById("sec-proses").classList.add("hidden");
           document.getElementById("sec-sukses").classList.remove("hidden");
         }
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error("Error cek status:", err));
     }
   </script>
 </body>
