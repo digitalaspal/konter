@@ -19,6 +19,13 @@
     .hidden { display: none; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #25d366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* STYLE STIKER RINCIAN SUKSES */
+    .receipt-box { background: #f8f9fa; border: 1px dashed #25d366; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; }
+    .receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .receipt-row:last-child { margin-bottom: 0; }
+    .receipt-label { color: #666; font-weight: 500; }
+    .receipt-val { color: #222; font-weight: bold; word-break: break-all; text-align: right; }
   </style>
 </head>
 <body>
@@ -41,7 +48,7 @@
     <button onclick="prosesBeli()">BELI SEKARANG</button>
   </div>
 
-  <!-- LAYER 2: DISPLAY PROSES (DITAHAN DI SINI) -->
+  <!-- LAYER 2: DISPLAY PROSES -->
   <div class="card hidden" id="sec-proses">
     <h3>⏳ Sedang Diproses</h3>
     <div class="spinner"></div>
@@ -49,16 +56,35 @@
     <p style="font-size: 12px; color: #666;">Mohon tunggu, status halaman ini akan otomatis berganti setelah paket berhasil diisi.</p>
   </div>
 
-  <!-- LAYER 3: DISPLAY SUKSES -->
+  <!-- LAYER 3: DISPLAY SUKSES + RINCIAN -->
   <div class="card hidden" id="sec-sukses">
     <h1 style="color: #25d366; margin-bottom: 5px;">✅ BERHASIL!</h1>
-    <p>Paket data sudah aktif di nomor Anda.</p>
+    <p style="margin-top: 0; font-size: 14px; color: #555;">Paket data telah berhasil diaktifkan.</p>
+    
+    <!-- BOX RINCIAN TRANSAKSI -->
+    <div class="receipt-box">
+      <div class="receipt-row">
+        <span class="receipt-label">ID Pesanan:</span>
+        <span class="receipt-val" id="res-id">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Nomor HP:</span>
+        <span class="receipt-val" id="res-nomor">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Paket Data:</span>
+        <span class="receipt-val" id="res-paket">-</span>
+      </div>
+    </div>
+
     <button onclick="location.reload()" style="background: #007bff;">Selesai / Transaksi Baru</button>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycOunJI7aY36KQKjse75YAybZWnEmv-28ksEnHWNdoPHwR_wPlyHc5eWSXvJcou0UG/exec"; 
     let activeOrderId = "";
+    let activeNomor = "";
+    let activePaket = "";
     let timerCek = null;
 
     // AMBIL DAFTAR PAKET SAAT HALAMAN DIBUKA
@@ -88,14 +114,14 @@
 
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
-      let paket = document.getElementById("paket").value;
+      let paketInput = document.getElementById("paket").value;
 
       if (!nomorInput) { 
         alert("Nomor HP harus diisi!"); 
         return; 
       }
 
-      if (!paket || paket.includes("Gagal") || paket.includes("Memuat")) {
+      if (!paketInput || paketInput.includes("Gagal") || paketInput.includes("Memuat")) {
         alert("Pilihan paket belum siap!");
         return;
       }
@@ -112,20 +138,22 @@
       btn.style.opacity = "0.6";
       btn.innerText = "MENGIRIM PESANAN...";
 
-      fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomor)}&paket=${encodeURIComponent(paket)}`, {
+      fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomor)}&paket=${encodeURIComponent(paketInput)}`, {
         method: "GET",
         redirect: "follow"
       })
       .then(res => res.json())
       .then(data => {
         if (data.result === "success" && data.id) {
-          activeOrderId = data.id; // SIMPAN ID UNIK
+          activeOrderId = data.id;
+          activeNomor = nomor;
+          activePaket = paketInput;
           
-          // PINDAH KAN TAMPILAN KE "SEDANG DIPROSES"
+          // TAMPILKAN LAYAR PROSES
           document.getElementById("sec-form").classList.add("hidden");
           document.getElementById("sec-proses").classList.remove("hidden");
 
-          // JALANKAN PENGECEKAN KETAT TIAP 3 DETIK
+          // JALANKAN CEK STATUS BERKALA
           timerCek = setInterval(cekStatusKetat, 3000);
         } else {
           throw new Error("Gagal menyimpan transaksi");
@@ -149,9 +177,15 @@
       })
       .then(res => res.json())
       .then(data => {
-        // HANYA JIKA RESPON DARI SHEET ADALAH PERSIS "SUCCESS"
         if (data && data.status === "SUCCESS") {
           clearInterval(timerCek);
+          
+          // ISI RINCIAN DENGAN DATA PEMBELI
+          document.getElementById("res-id").innerText = activeOrderId;
+          document.getElementById("res-nomor").innerText = activeNomor;
+          document.getElementById("res-paket").innerText = activePaket;
+
+          // PINDAH KAN LAYAR KE SUKSES
           document.getElementById("sec-proses").classList.add("hidden");
           document.getElementById("sec-sukses").classList.remove("hidden");
         }
