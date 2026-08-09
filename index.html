@@ -25,7 +25,6 @@
 
   <!-- LAYER 1: FORM PEMBELIAN (UTAMA) -->
   <div class="card" id="sec-form">
-    
     <div class="header-box">
       <h2>⚡ Isi Paket Data Mandiri</h2>
       <p>Masukkan nomor HP & pilih paket, pesanan akan langsung diproses Admin.</p>
@@ -59,15 +58,16 @@
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycOunJI7aY36KQKjse75YAybZWnEmv-28ksEnHWNdoPHwR_wPlyHc5eWSXvJcou0UG/exec"; 
-    let orderId = "";
+    let activeOrderId = "";
+    let checkTimer = null;
 
-    // OTOMATIS AMBIL DAFTAR PAKET DARI KOLOM F SHEET SAAT LAMAN DIBUKA
+    // AMBIL DAFTAR PAKET
     window.onload = function() {
       fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
         .then(data => {
           let selectPaket = document.getElementById("paket");
-          selectPaket.innerHTML = ""; // Bersihkan opsi loading
+          selectPaket.innerHTML = "";
           
           if (data.paket && data.paket.length > 0) {
             data.paket.forEach(item => {
@@ -118,15 +118,17 @@
       })
       .then(res => res.json())
       .then(data => {
-        if (data.result === "success") {
-          orderId = data.id;
+        if (data.result === "success" && data.id) {
+          activeOrderId = data.id; // TAHAN ID TRANSAKSI
           
+          // PINDAH KE PROSES
           document.getElementById("sec-form").classList.add("hidden");
           document.getElementById("sec-proses").classList.remove("hidden");
 
-          setInterval(cekStatus, 3000);
+          // CEK SETIAP 3 DETIK
+          checkTimer = setInterval(cekStatus, 3000);
         } else {
-          throw new Error("Gagal menyimpan data");
+          throw new Error("Gagal membuat transaksi");
         }
       })
       .catch(err => {
@@ -139,14 +141,17 @@
     }
 
     function cekStatus() {
-      if(!orderId) return;
-      fetch(`${SCRIPT_URL}?action=check&id=${orderId}`, {
+      if (!activeOrderId) return;
+
+      fetch(`${SCRIPT_URL}?action=check&id=${encodeURIComponent(activeOrderId)}`, {
         method: "GET",
         redirect: "follow"
       })
       .then(res => res.json())
       .then(data => {
-        if (data.status === "SUCCESS") {
+        // HANYA PINDAH JIKA RESPONS BENAR-BENAR "SUCCESS" (EXPLICIT EQUALITY)
+        if (String(data.status).toUpperCase() === "SUCCESS") {
+          clearInterval(checkTimer);
           document.getElementById("sec-proses").classList.add("hidden");
           document.getElementById("sec-sukses").classList.remove("hidden");
         }
