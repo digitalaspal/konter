@@ -61,8 +61,7 @@
     <button onclick="location.reload()" style="background: #007bff;">Selesai / Transaksi Baru</button>
   </div>
 
-  <script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT LATEST DEPLOYMENT DI SINI
+<script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycOunJI7aY36KQKjse75YAybZWnEmv-28ksEnHWNdoPHwR_wPlyHc5eWSXvJcou0UG/exec"; 
     let orderId = "";
 
@@ -75,13 +74,11 @@
         return; 
       }
 
-      // Pastikan format nomor diawali angka 0
       let nomor = nomorInput;
       if (!nomor.startsWith("0")) {
         nomor = "0" + nomor;
       }
 
-      // Cegah klik 2 kali
       let btn = document.querySelector("button[onclick='prosesBeli()']");
       if (btn.disabled) return;
 
@@ -89,34 +86,47 @@
       btn.style.opacity = "0.6";
       btn.innerText = "MENGIRIM PESANAN...";
 
-      fetch(`${SCRIPT_URL}?action=create&nomor=${nomor}&paket=${paket}`)
-        .then(res => res.json())
-        .then(data => {
+      // PERBAIKAN FETCH DENGAN REDIRECT FOLLOW
+      fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomor)}&paket=${encodeURIComponent(paket)}`, {
+        method: "GET",
+        redirect: "follow"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.result === "success") {
           orderId = data.id;
           
           document.getElementById("sec-form").classList.add("hidden");
           document.getElementById("sec-proses").classList.remove("hidden");
 
           setInterval(cekStatus, 3000);
-        })
-        .catch(err => {
-          alert("Gagal terhubung ke sistem. Silakan coba lagi.");
-          btn.disabled = false;
-          btn.style.opacity = "1";
-          btn.innerText = "BELI SEKARANG";
-        });
+        } else {
+          throw new Error("Gagal menyimpan data");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal terhubung ke sistem. Silakan coba lagi.");
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.innerText = "BELI SEKARANG";
+      });
     }
 
     function cekStatus() {
       if(!orderId) return;
-      fetch(`${SCRIPT_URL}?action=check&id=${orderId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "SUCCESS") {
-            document.getElementById("sec-proses").classList.add("hidden");
-            document.getElementById("sec-sukses").classList.remove("hidden");
-          }
-        });
+      fetch(`${SCRIPT_URL}?action=check&id=${orderId}`, {
+        method: "GET",
+        redirect: "follow"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "SUCCESS") {
+          document.getElementById("sec-proses").classList.add("hidden");
+          document.getElementById("sec-sukses").classList.remove("hidden");
+        }
+      })
+      .catch(err => console.error(err));
     }
   </script>
 </body>
