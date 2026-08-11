@@ -193,13 +193,20 @@
       }
     }
     
-    // SENSOR NOMOR HP
-    function sensorNomor(nomor) {
-      if (!nomor) return "-";
-      let bersih = nomor.toString().trim().replace(/[^0-9]/g, "");
-      if (bersih.length <= 5) return "08xxxxxxxx";
-      return bersih.slice(0, -5) + "xxxxx";
-    }
+   // SENSOR 4 ANGKA DI TENGAH NOMOR HP
+function sensorNomor(nomor) {
+  if (!nomor) return "-";
+  let bersih = nomor.toString().trim().replace(/[^0-9]/g, "");
+  
+  // Jika panjang nomor terlalu pendek (kurang dari 8 angka), sensor biasa
+  if (bersih.length < 8) return "08xxxxxx";
+
+  // Ambil 4 angka di depan dan sisanya di belakang
+  let depan = bersih.slice(0, 4);
+  let belakang = bersih.slice(8);
+  
+  return depan + "XXXX" + belakang;
+}
 
     // FORMAT NOMOR REALTIME
     function formatNomorRealtime(input) {
