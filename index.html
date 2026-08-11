@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Konter Ardaf Store</title>
-  <!-- Library Tesseract.js untuk OCR AI langsung di browser -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #f0f2f5; margin: 0; }
     .card { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -24,7 +22,7 @@
     input:focus, select:focus { border-color: #25d366; }
     button { background: #25d366; color: white; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
     button:hover { background: #1eb857; }
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #25d366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
@@ -43,7 +41,7 @@
     .live-dot { width: 7px; height: 7px; background-color: #25d366; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
-    /* KONTEN STATIS (TANPA SCROLL OTOMATIS) */
+    /* KONTEN STATIS */
     .buyers-container { width: 100%; position: relative; max-height: 550px;}
     .buyers-list { display: flex; flex-direction: column; gap: 8px; }
     .buyer-item { background: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #25d366; padding: 5px 5px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -141,19 +139,19 @@
     </div>
   </div>
 
- <!-- MODAL KAMERA SCAN -->
-<div class="modal-overlay hidden" id="modal-kamera">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color:#333;">📸 Arahkan Nomor ke Kotak</h3>
-    <div class="webcam-box">
-      <video id="webcam" autoplay playsinline></video>
-      <div class="scan-guide"></div>
+  <!-- MODAL KAMERA SCAN -->
+  <div class="modal-overlay hidden" id="modal-kamera">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:#333;">📸 Arahkan Nomor ke Kotak</h3>
+      <div class="webcam-box">
+        <video id="webcam" autoplay playsinline></video>
+        <div class="scan-guide"></div>
+      </div>
+      <canvas id="canvas-capture" class="hidden"></canvas>
+      <button class="btn-take-photo" id="btn-snap" onclick="ambilDanProsesFoto()">PINDAP / FOTO</button>
+      <button class="btn-close-modal" onclick="tutupKamera()">Batal</button>
     </div>
-    <canvas id="canvas-capture" class="hidden"></canvas>
-    <button class="btn-take-photo" id="btn-snap" onclick="ambilDanProsesFoto()">PINDAP / FOTO</button>
-    <button class="btn-close-modal" onclick="tutupKamera()">Batal</button>
   </div>
-</div>
 
   <!-- MODAL 2: POP-UP SELEKSI BANYAK NOMOR -->
   <div class="modal-overlay hidden" id="modal-pilihan">
@@ -166,16 +164,15 @@
   </div>
 
   <script>
-    let videoStream = null;
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
     const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
 
+    let videoStream = null;
     let activeOrderId = "";
     let activeNomor = "";
     let activePaket = "";
     let timerCek = null;
     let previousBuyersJson = "";
-    let videoStream = null;
 
     // FUNGSI SENSOR 5 ANGKA TERAKHIR NOMOR HP
     function sensorNomor(nomor) {
@@ -199,9 +196,7 @@
       input.value = bersih;
     }
 
-  
-
-   /* --- FUNGSI KAMERA SCAN & OCR AI --- */
+    /* --- FUNGSI KAMERA SCAN & OCR AI --- */
     function bukaKamera() {
       const modal = document.getElementById("modal-kamera");
       const video = document.getElementById("webcam");
@@ -242,7 +237,7 @@
       }
     }
 
-  function ambilDanProsesFoto() {
+    function ambilDanProsesFoto() {
       const video = document.getElementById("webcam");
       const canvas = document.getElementById("canvas-capture");
       const btnSnap = document.getElementById("btn-snap");
@@ -255,10 +250,8 @@
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Ambil string gambar Base64
       const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
 
-      // Kirim gambar ke Cloudflare Worker
       fetch(`${SCRIPT_URL}?action=ocr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -286,11 +279,9 @@
 
     // EKSTRAKSI NOMOR HP DAN POP-UP PILIHAN
     function ekstrakDanFilterNomor(teksMentah) {
-      // Ambil pola deretan angka yang berpotensi sebagai nomor HP Indonesia (10-13 digit, diawali 08/628)
       let cleanedText = teksMentah.replace(/[^0-9\s]/g, " ");
       let matches = cleanedText.match(/(08\d{8,11}|628\d{7,10})/g) || [];
 
-      // Hilangkan duplikasi nomor
       let uniqueNumbers = [...new Set(matches.map(n => {
         if (n.startsWith("62")) return "0" + n.substring(2);
         return n;
@@ -299,10 +290,8 @@
       if (uniqueNumbers.length === 0) {
         alert("Nomor HP tidak terdeteksi dari foto. Coba foto lebih dekat dan terang.");
       } else if (uniqueNumbers.length === 1) {
-        // Jika hanya 1 nomor terdeteksi, langsung masukkan
         pilihNomor(uniqueNumbers[0]);
       } else {
-        // Jika terdeteksi banyak nomor, tampilkan POP-UP PILIHAN
         tampilkanModalPilihan(uniqueNumbers);
       }
     }
@@ -314,7 +303,6 @@
       listNomor.forEach(no => {
         let btn = document.createElement("button");
         btn.className = "phone-option-btn";
-        // Format nomor dengan tanda strip agar sangat mudah dibaca ibu
         let formattedStr = no.replace(/(\d{4})(\d{4})(\d+)/, "$1-$2-$3");
         btn.innerText = "🟢 " + formattedStr;
         btn.onclick = function() {
