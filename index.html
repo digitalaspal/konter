@@ -260,13 +260,22 @@
       btnSnap.innerText = "🤖 Google AI Membaca Foto...";
       btnSnap.disabled = true;
 
+      // 1. Tangkap gambar saat ini ke dalam Canvas
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      // 2. LANGSUNG MATIKAN KAMERA SEKETIKA (Agar video tidak bergerak lagi)
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+
+      // Ambil data gambar Base64
       const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
 
+      // 3. Kirim ke Cloudflare Worker
       fetch(`${SCRIPT_URL}?action=ocr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -274,12 +283,16 @@
       })
       .then(res => res.json())
       .then(data => {
-        tutupKamera();
+        // Tutup jendela modal kamera setelah selesai
+        document.getElementById("modal-kamera").classList.add("hidden");
+        btnSnap.innerText = "PINDAP / FOTO";
+        btnSnap.disabled = false;
         
         let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
         console.log("Hasil AI:", textResult);
 
         if (textResult.includes("KOSONG") || !textResult) {
+          bicara("Nomor tidak terdeteksi, silakan foto ulang");
           alert("Google AI tidak menemukan nomor HP di foto tersebut. Coba foto lebih dekat dan terang.");
         } else {
           ekstrakDanFilterNomor(textResult);
@@ -287,8 +300,12 @@
       })
       .catch(err => {
         console.error("Error AI:", err);
+        document.getElementById("modal-kamera").classList.add("hidden");
+        btnSnap.innerText = "PINDAP / FOTO";
+        btnSnap.disabled = false;
+        
+        bicara("Gagal membaca foto");
         alert("Gagal terhubung ke AI. Pastikan jaringan internet stabil.");
-        tutupKamera();
       });
     }    
 
