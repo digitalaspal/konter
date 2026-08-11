@@ -125,7 +125,7 @@
   <!-- CONTAINER DAFTAR PEMBELI HARI INI (3 KOLOM) -->
   <div class="buyers-card">
     <div class="buyers-header">
-      <h3>🔥 Pembeli Hari Ini</h3>
+      <h3>🔥Laporan Hari Ini</h3>
       <span class="live-badge"><span class="live-dot"></span> LIVE</span>
     </div>
     <div class="table-responsive">
@@ -438,7 +438,7 @@
         tr.innerHTML = `
           <td>
             <strong>${sensorNomor(item.r)}</strong>
-            <span class="buyer-time">🕒 ${item.q || 'Baru saja'}</span>
+            <span class="buyer-time">${item.q || 'Baru saja'}</span>
           </td>
           <td>📦 ${item.t || '-'}</td>
           <td>${statusHtml}</td>
