@@ -453,37 +453,42 @@
       });
     }
 
-    // FUNGSI PERUBAHAN STATUS & KIRIM KE SERVER/DATABASE
-    function ubahStatusAction(selectEl, orderId) {
-      let selectedVal = selectEl.value;
+   // FUNGSI UNTUK MERUBAH STATUS DI KOLOM STATUS & SIMPAN KE SHEET (KOLOM U)
+function ubahStatusAction(selectEl, orderId) {
+  let selectedVal = selectEl.value;
 
-      if (selectedVal === "Selesai") {
-        let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
-        
-        if (konfirmasi) {
-          selectEl.disabled = true;
-          selectEl.classList.add("is-selesai");
+  if (selectedVal === "Selesai") {
+    let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
+    
+    if (konfirmasi) {
+      selectEl.disabled = true;
+      selectEl.classList.add("is-selesai");
 
-          // Simpan status di memori lokal browser
-          localStatusMap[orderId] = "Selesai";
+      // 1. Simpan sementara di memori browser agar tampilan tidak kembali ke Pending saat auto-refresh 5 detik
+      localStatusMap[orderId] = "Selesai";
 
-          // Kirim pembaruan status ke Backend (Cloudflare Worker -> Google Apps Script)
-          fetch(`${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`, {
-            method: "GET"
-          })
-          .then(res => res.json())
-          .then(data => {
-            console.log("Status berhasil disimpan di Google Sheets (Kolom U):", data);
-          })
-          .catch(err => {
-            console.error("Gagal update status di server:", err);
-          });
-
+      // 2. Kirim perintah updateStatus ke Backend dengan menyertakan Nomor HP (orderId)
+      fetch(`${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`, {
+        method: "GET"
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Respon dari Server:", data);
+        if (data.result === "success") {
+          console.log("✅ Berhasil memperbarui status di Google Sheets Kolom U!");
         } else {
-          selectEl.value = "Pending";
+          alert("⚠️ Peringatan: Nomor HP tidak ditemukan di Kolom R Google Sheets.");
         }
-      }
+      })
+      .catch(err => {
+        console.error("Gagal update status di server:", err);
+      });
+
+    } else {
+      selectEl.value = "Pending";
     }
+  }
+}
 
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
