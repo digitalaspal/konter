@@ -36,7 +36,7 @@
     @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
     /* KONTAINER SCROLL TRANSAKSI */
-    .buyers-container { height: 260px; overflow: hidden; position: relative; }
+    .buyers-container { max-height: 520px; overflow-y: auto; position: relative; }
     .buyers-list { display: flex; flex-direction: column; gap: 8px; transition: transform 0.5s ease-in-out; }
     
     .buyer-item { background: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #25d366; padding: 10px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease-in; }
@@ -114,11 +114,14 @@
   </div>
 <script>
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
-    // Ganti URL di bawah dengan Web App URL dari Apps Script / Worker khusus Sheet2 Anda
+    // Ganti URL di bawah dengan URL penyedia data Sheet2 Anda
     const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
 
-    let currentBuyers = [];
-    let scrollInterval = null;
+    let activeOrderId = "";
+    let activeNomor = "";
+    let activePaket = "";
+    let timerCek = null;
+    let previousBuyersJson = ""; // Menyimpan state data lama untuk deteksi data baru
 
     // FUNGSI SENSOR 5 ANGKA TERAKHIR NOMOR HP
     function sensorNomor(nomor) {
@@ -128,23 +131,40 @@
       return bersih.slice(0, -5) + "xxxxx";
     }
 
-    // AMBIL DAFTAR PEMBELI SAAT HALAMAN DIBUKA
+    // FUNGSI RAPIKAN NOMOR HP LANGSUNG SAAT KETIK
+    function formatNomorRealtime(input) {
+      let val = input.value;
+      let bersih = val.replace(/[^0-9]/g, "");
+      
+      if (bersih.startsWith("62")) {
+        bersih = "0" + bersih.substring(2);
+      } else if (bersih.startsWith("8")) {
+        bersih = "0" + bersih;
+      }
+
+      input.value = bersih;
+    }
+
+    // JALANKAN SAAT HALAMAN DIBUKA
     window.onload = function() {
-      // 1. Ambil Paket (dari SCRIPT_URL)
+      // 1. Ambil Daftar Paket
       fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
         .then(data => {
           let selectPaket = document.getElementById("paket");
           selectPaket.innerHTML = "";
+          
           if (data.paket && data.paket.length > 0) {
             data.paket.forEach(item => {
               let opt = document.createElement("option");
               opt.value = item;
               opt.innerText = item;
+              
               if (item.toUpperCase().includes("HABIS")) {
                 opt.disabled = true;
                 opt.style.color = "#dc3545";
               }
+              
               selectPaket.appendChild(opt);
             });
           } else {
@@ -152,51 +172,69 @@
           }
         })
         .catch(err => {
+          console.error(err);
           document.getElementById("paket").innerHTML = "<option value=''>Gagal memuat paket</option>";
         });
 
-      // 2. Load Pembeli Hari Ini
+      // 2. Load Daftar Pembeli & Cek Otomatis Setiap 5 Detik
       loadPembeli();
-      setInterval(loadPembeli, 10000); // Perbarui tiap 10 detik
+      setInterval(loadPembeli, 5000); 
     };
 
-    // FUNGSI MEMANGGIL DATA PEMBELI
+    // FUNGSI MEMANGGIL DATA PEMBELI DARI BACKEND
     function loadPembeli() {
-      const container = document.getElementById("buyers-list");
+      if (!BUYERS_URL || BUYERS_URL.includes("URL_APPS_SCRIPT_ATAU_WORKER")) return;
 
       fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
         .then(res => {
-          if (!res.ok) throw new Error("Network response was not ok");
+          if (!res.ok) throw new Error("Gagal mengambil data");
           return res.json();
         })
         .then(data => {
           if (data && Array.isArray(data.pembeli)) {
-            currentBuyers = data.pembeli;
-            renderBuyersList();
-          } else {
-            container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">Format data tidak sesuai</div>`;
+            let currentJson = JSON.stringify(data.pembeli);
+            
+            // Render ulang HANYA JIKA ada data baru / perubahan data dari sheet
+            if (currentJson !== previousBuyersJson) {
+              renderBuyersList(data.pembeli, previousBuyersJson !== "");
+              previousBuyersJson = currentJson;
+            }
           }
         })
         .catch(err => {
-          console.error("Gagal memuat daftar pembeli:", err);
-          container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #d32f2f;">Gagal terhubung ke data pembeli</div>`;
+          console.error("Error load pembeli:", err);
+          const container = document.getElementById("buyers-list");
+          if (previousBuyersJson === "") {
+            container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #d32f2f;">Gagal terhubung ke data pembeli</div>`;
+          }
         });
     }
 
-    // RENDER DAFTAR PEMBELI
-    function renderBuyersList() {
+    // RENDER MAKSIMAL 10 PEMBELI TERBARU
+    function renderBuyersList(pembeliList, isUpdate) {
       const container = document.getElementById("buyers-list");
       
-      if (!currentBuyers || currentBuyers.length === 0) {
+      if (!pembeliList || pembeliList.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">Belum ada transaksi hari ini</div>`;
         return;
       }
 
       container.innerHTML = "";
       
-      currentBuyers.forEach((item) => {
+      // Ambil MAKSIMAL 10 data teratas saja
+      const top10 = pembeliList.slice(0, 10);
+
+      top10.forEach((item, index) => {
         let div = document.createElement("div");
         div.className = "buyer-item";
+        
+        // Animasi fade-in hanya berjalan jika ini update data baru
+        if (isUpdate && index === 0) {
+          div.style.animation = "fadeIn 0.6s ease-in-out";
+        } else {
+          div.style.animation = "none";
+        }
+
         div.innerHTML = `
           <div class="buyer-info">
             <span class="buyer-phone">${sensorNomor(item.r)}</span>
@@ -206,31 +244,86 @@
         `;
         container.appendChild(div);
       });
-
-      // Jalankan animasi scroll jika item > 5
-      if (currentBuyers.length > 5 && !scrollInterval) {
-        startAutoScroll();
-      }
     }
 
-    function startAutoScroll() {
-      const container = document.getElementById("buyers-list");
-      scrollInterval = setInterval(() => {
-        if (currentBuyers.length <= 5) return;
-        let firstChild = container.children[0];
-        if (firstChild) {
-          firstChild.style.marginTop = "-52px";
-          firstChild.style.transition = "margin-top 0.5s ease-in-out, opacity 0.5s ease";
-          firstChild.style.opacity = "0";
+    function prosesBeli() {
+      let nomorInput = document.getElementById("nomor").value.trim();
+      let paketInput = document.getElementById("paket").value;
 
-          setTimeout(() => {
-            firstChild.style.marginTop = "0px";
-            firstChild.style.opacity = "1";
-            firstChild.style.transition = "none";
-            container.appendChild(firstChild);
-          }, 500);
+      if (!nomorInput || nomorInput.length < 10) { 
+        alert("Nomor HP tidak valid! Masukkan nomor dengan benar."); 
+        return; 
+      }
+
+      if (!paketInput || paketInput.includes("Gagal") || paketInput.includes("Memuat")) {
+        alert("Pilihan paket belum siap!");
+        return;
+      }
+
+      if (paketInput.toUpperCase().includes("HABIS")) {
+        alert("Maaf, paket data ini sedang HABIS!");
+        return;
+      }
+
+      let btn = document.querySelector("button[onclick='prosesBeli()']");
+      if (btn.disabled) return;
+
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.innerText = "MENGIRIM PESANAN...";
+
+      fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomorInput)}&paket=${encodeURIComponent(paketInput)}`, {
+        method: "GET",
+        redirect: "follow"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.result === "success" && data.id) {
+          activeOrderId = data.id;
+          activeNomor = nomorInput;
+          activePaket = paketInput;
+          
+          document.getElementById("sec-form").classList.add("hidden");
+          document.getElementById("sec-proses").classList.remove("hidden");
+
+          timerCek = setInterval(cekStatusKetat, 3000);
+        } else {
+          throw new Error("Gagal menyimpan transaksi");
         }
-      }, 3000);
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal terhubung ke sistem. Silakan coba lagi.");
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.innerText = "BELI SEKARANG";
+      });
+    }
+
+    function cekStatusKetat() {
+      if (!activeOrderId) return;
+
+      fetch(`${SCRIPT_URL}?action=check&id=${encodeURIComponent(activeOrderId)}`, {
+        method: "GET",
+        redirect: "follow"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.status === "SUCCESS") {
+          clearInterval(timerCek);
+          
+          document.getElementById("res-id").innerText = activeOrderId;
+          document.getElementById("res-nomor").innerText = activeNomor;
+          document.getElementById("res-paket").innerText = activePaket;
+
+          document.getElementById("sec-proses").classList.add("hidden");
+          document.getElementById("sec-sukses").classList.remove("hidden");
+
+          // Refresh langsung setelah transaksi sukses
+          loadPembeli();
+        }
+      })
+      .catch(err => console.error("Error cek status:", err));
     }
   </script>
 
