@@ -201,14 +201,45 @@
 
   
 
+   /* --- FUNGSI KAMERA SCAN & OCR AI --- */
+    function bukaKamera() {
+      const modal = document.getElementById("modal-kamera");
+      const video = document.getElementById("webcam");
+      
+      if (!modal || !video) {
+        alert("Elemen modal kamera tidak ditemukan di HTML!");
+        return;
+      }
+
+      modal.classList.remove("hidden");
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      })
+      .then(stream => {
+        videoStream = stream;
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Gagal akses kamera:", err);
+        alert("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
+        tutupKamera();
+      });
+    }
+
     function tutupKamera() {
       if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
       }
-      document.getElementById("modal-kamera").classList.add("hidden");
-      document.getElementById("btn-snap").innerText = "PINDAP / FOTO";
-      document.getElementById("btn-snap").disabled = false;
+      const modal = document.getElementById("modal-kamera");
+      if (modal) modal.classList.add("hidden");
+      
+      const btnSnap = document.getElementById("btn-snap");
+      if (btnSnap) {
+        btnSnap.innerText = "PINDAP / FOTO";
+        btnSnap.disabled = false;
+      }
     }
 
   function ambilDanProsesFoto() {
