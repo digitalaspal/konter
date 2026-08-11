@@ -112,15 +112,18 @@
       </div>
     </div>
   </div>
-
-  <script>
+<script>
+    // 1. URL UTAMA (Untuk Beli & Cek Paket)
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
+    
+    // 2. URL KHUSUS DATA PEMBELI (Ganti string kosong di bawah dengan URL Worker/Apps Script pembeli Anda)
+    const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
+
     let activeOrderId = "";
     let activeNomor = "";
     let activePaket = "";
     let timerCek = null;
     let currentBuyers = [];
-    let scrollIndex = 0;
     let scrollInterval = null;
 
     // FUNGSI SENSOR 5 ANGKA TERAKHIR NOMOR HP
@@ -147,7 +150,7 @@
 
     // AMBIL DAFTAR PAKET & DAFTAR PEMBELI SAAT HALAMAN DIBUKA
     window.onload = function() {
-      // 1. Ambil Paket
+      // 1. Ambil Paket Data dari SCRIPT_URL
       fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
         .then(data => {
@@ -176,14 +179,17 @@
           document.getElementById("paket").innerHTML = "<option value=''>Gagal memuat paket</option>";
         });
 
-      // 2. Load Pembeli Hari Ini & Auto Refresh
+      // 2. Load Pembeli Hari Ini dari BUYERS_URL
       loadPembeli();
-      setInterval(loadPembeli, 10000); // Perbarui data dari Sheet2 setiap 10 detik
+      setInterval(loadPembeli, 10000); // Perbarui data setiap 10 detik
     };
 
-    // FUNGSI MEMANGGIL DATA PEMBELI DARI BACKEND
+    // FUNGSI MEMANGGIL DATA PEMBELI DARI BUYERS_URL
     function loadPembeli() {
-      fetch(`${SCRIPT_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
+      // Jika URL pembeli belum diisi, hentikan fungsi
+      if (BUYERS_URL.includes("URL_WORKER_ATAU_APPS_SCRIPT_PEMBELI_ANDA")) return;
+
+      fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
         .then(data => {
           if (data && data.pembeli) {
@@ -194,7 +200,7 @@
         .catch(err => console.error("Gagal memuat daftar pembeli:", err));
     }
 
-    // RENDER / TAMPILKAN DAFTAR PEMBELI DENGAN PERPINDAHAN TRANSAKSI
+    // RENDER / TAMPILKAN DAFTAR PEMBELI
     function renderBuyersList() {
       const container = document.getElementById("buyers-list");
       if (!currentBuyers || currentBuyers.length === 0) {
@@ -204,9 +210,7 @@
 
       container.innerHTML = "";
       
-      // Buat elemen HTML untuk semua baris pembeli
       currentBuyers.forEach((item) => {
-        // Kolom Q = Waktu/Tanggal (q), Kolom R = Nomor HP (r), Kolom T = Paket Data (t)
         let div = document.createElement("div");
         div.className = "buyer-item";
         div.innerHTML = `
@@ -219,20 +223,18 @@
         container.appendChild(div);
       });
 
-      // Jika transaksi > 10, jalankan pergeseran otomatis (1 per 1 menghilang & muncul transaksi baru)
       if (currentBuyers.length > 5 && !scrollInterval) {
         startAutoScroll();
       }
     }
 
-    // ANIMASI TICKER SCROLL UNTUK MEROTASI TRANSAKSI
+    // ANIMASI AUTO-SCROLL/TICKER TRANSAKSI
     function startAutoScroll() {
       const container = document.getElementById("buyers-list");
       
       scrollInterval = setInterval(() => {
         if (currentBuyers.length <= 5) return;
 
-        // Pindahkan item teratas ke paling bawah secara lancar
         let firstChild = container.children[0];
         if (firstChild) {
           firstChild.style.marginTop = "-52px";
@@ -246,7 +248,7 @@
             container.appendChild(firstChild);
           }, 500);
         }
-      }, 3000); // Berganti setiap 3 detik
+      }, 3000);
     }
 
     function prosesBeli() {
@@ -322,12 +324,13 @@
           document.getElementById("sec-proses").classList.add("hidden");
           document.getElementById("sec-sukses").classList.remove("hidden");
 
-          // Refresh data pembeli setelah sukses
+          // Refresh data pembeli dari BUYERS_URL setelah transaksi berhasil
           loadPembeli();
         }
       })
       .catch(err => console.error("Error cek status:", err));
     }
   </script>
+
 </body>
 </html>
