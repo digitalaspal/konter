@@ -174,6 +174,21 @@
     let timerCek = null;
     let previousBuyersJson = "";
 
+// FUNGSI UNTUK MENGELUARKAN SUARA KONFIRMASI
+    function bicara(teks) {
+      if ('speechSynthesis' in window) {
+        // Hentikan suara sebelumnya jika masih ada yang berjalan
+        window.speechSynthesis.cancel();
+
+        let ucapan = new SpeechSynthesisUtterance(teks);
+        ucapan.lang = 'id-ID'; // Bahasa Indonesia
+        ucapan.rate = 0.9;     // Kecepatan bicara sedikit diperlambat agar jelas untuk Ibu
+        ucapan.pitch = 1.0;
+
+        window.speechSynthesis.speak(ucapan);
+      }
+    }
+    
     // FUNGSI SENSOR 5 ANGKA TERAKHIR NOMOR HP
     function sensorNomor(nomor) {
       if (!nomor) return "-";
@@ -319,6 +334,12 @@
       const inputEl = document.getElementById("nomor");
       inputEl.value = nomor;
       formatNomorRealtime(inputEl);
+
+      // Ejaan per digit angka agar mudah didengar (misal: 0-8-1-2)
+      let ejaanNomor = nomor.split("").join(" ");
+      
+      // HP Mengeluarkan Suara
+      bicara(`Nomor terdeteksi: ${ejaanNomor}`);
     }
 
     function tutupModalPilihan() {
