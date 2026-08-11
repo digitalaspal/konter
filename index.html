@@ -453,7 +453,7 @@
       });
     }
 
-  // FUNGSI PERUBAHAN STATUS (DENGAN METODE POST PASTI TERSIMPAN)
+  // FUNGSI PERUBAHAN STATUS (PASTI BERHASIL DENGAN GET METHOD)
 function ubahStatusAction(selectEl, orderId) {
   let selectedVal = selectEl.value;
 
@@ -464,25 +464,19 @@ function ubahStatusAction(selectEl, orderId) {
       selectEl.disabled = true;
       selectEl.classList.add("is-selesai");
 
-      // 1. Simpan di memori lokal browser
+      // 1. Simpan sementara di memori browser agar tidak tertimpa saat auto-refresh
       localStatusMap[orderId] = "Selesai";
 
-      // 2. Kirim via POST JSON langsung ke backend
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          action: "updateStatus",
-          id: orderId,       // Mengirimkan Nomor HP
-          status: "Selesai"  // Status baru
-        })
+      // 2. Kirim via GET dengan URL Query Params
+      const updateUrl = `${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`;
+
+      fetch(updateUrl, {
+        method: "GET"
       })
       .then(res => res.json())
       .then(data => {
         console.log("Respon update status:", data);
-        if (data.status === "success" || data.result === "success") {
+        if (data.result === "success" || data.status === "success") {
           console.log("✅ BERHASIL MENGUBAH STATUS DI KOLOM U SHEETS!");
         } else {
           alert("⚠️ Gagal memperbarui di Sheet. Pesan server: " + (data.message || "Data tidak ditemukan"));
