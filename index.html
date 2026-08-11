@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Konter Ardaf Store</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #0f172a; color: #f8fafc; margin: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #c2d2ff; color: #f8fafc; margin: 0; }
     .card { background: #1e293b; padding: 25px; border-radius: 15px; width: 100%; max-width: 480px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); box-sizing: border-box; }
-    .header-box { background: #064e3b; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    .header-box { background: #2e334f; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
     .header-box h2 { color: #34d399; margin: 0 0 5px 0; font-size: 18px; }
     .header-box p { color: #cbd5e1; margin: 0; font-size: 12px; line-height: 1.4; }
     label { display: block; text-align: left; font-weight: bold; font-size: 13px; margin: 12px 0 5px 0; color: #cbd5e1; }
@@ -124,16 +124,16 @@
   <!-- CONTAINER DAFTAR PEMBELI HARI INI (3 KOLOM) -->
   <div class="buyers-card">
     <div class="buyers-header">
-      <h3>🔥 Pembeli Hari Ini</h3>
+      <h3>🔥Laporan Hari Ini</h3>
       <span class="live-badge"><span class="live-dot"></span> LIVE</span>
     </div>
     <div class="table-responsive">
       <table class="buyers-table">
         <thead>
           <tr>
-            <th>Nomor & Waktu</th>
-            <th>Paket</th>
-            <th>Status</th>
+            <th>NOMOR</th>
+            <th>TIPE</th>
+            <th>STATUS</th>
           </tr>
         </thead>
         <tbody id="buyers-list">
@@ -436,8 +436,8 @@
 
         let statusHtml = `
           <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${orderId}')" ${isSelesai ? 'disabled' : ''}>
-            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● Pending (BON)</option>
-            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● Selesai (Lunas)</option>
+            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
+            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
           </select>
         `;
 
@@ -446,7 +446,7 @@
             <strong>${sensorNomor(item.r)}</strong>
             <span class="buyer-time">${item.q || 'Baru saja'}</span>
           </td>
-          <td>📦 ${item.t || '-'}</td>
+          <td>${item.t || '-'}</td>
           <td>${statusHtml}</td>
         `;
         container.appendChild(tr);
