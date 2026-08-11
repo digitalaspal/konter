@@ -141,19 +141,19 @@
     </div>
   </div>
 
-  <!-- MODAL 1: KAMERA SCAN -->
-  <div class="modal-overlay hidden" id="modal-kamera">
-    <div class="modal-content">
-      <h3 style="margin-top:0; color:#333;">📸 Arahkan Nomor ke Kotak</h3>
-      <div class="webcam-box">
-        <video id="webcam" autoplay playsinline></video>
-        <div class="scan-guide"></div>
-      </div>
-      <canvas id="canvas-capture" class="hidden"></canvas>
-      <button class="btn-take-photo" id="btn-snap" onclick="ambilDanProsesFoto()">PINDAP / FOTO</button>
-      <button class="btn-close-modal" onclick="tutupKamera()">Batal</button>
+ <!-- MODAL KAMERA SCAN -->
+<div class="modal-overlay hidden" id="modal-kamera">
+  <div class="modal-content">
+    <h3 style="margin-top:0; color:#333;">📸 Arahkan Nomor ke Kotak</h3>
+    <div class="webcam-box">
+      <video id="webcam" autoplay playsinline></video>
+      <div class="scan-guide"></div>
     </div>
+    <canvas id="canvas-capture" class="hidden"></canvas>
+    <button class="btn-take-photo" id="btn-snap" onclick="ambilDanProsesFoto()">PINDAP / FOTO</button>
+    <button class="btn-close-modal" onclick="tutupKamera()">Batal</button>
   </div>
+</div>
 
   <!-- MODAL 2: POP-UP SELEKSI BANYAK NOMOR -->
   <div class="modal-overlay hidden" id="modal-pilihan">
@@ -166,6 +166,7 @@
   </div>
 
   <script>
+    let videoStream = null;
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
     const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
 
