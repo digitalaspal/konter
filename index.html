@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Konter Ardaf Store</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 20px 10px; background: #f0f2f5; margin: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #f0f2f5; margin: 0; }
     .card { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
     .header-box { background: #e8f5e9; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
     .header-box h2 { color: #2e7d32; margin: 0 0 5px 0; font-size: 18px; }
@@ -26,6 +26,26 @@
     .receipt-row:last-child { margin-bottom: 0; }
     .receipt-label { color: #666; font-weight: 500; }
     .receipt-val { color: #222; font-weight: bold; word-break: break-all; text-align: right; }
+
+    /* STYLE DAFTAR PEMBELI HARI INI */
+    .buyers-card { background: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; margin-top: 20px; }
+    .buyers-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 12px; }
+    .buyers-header h3 { margin: 0; font-size: 15px; color: #1b5e20; display: flex; align-items: center; gap: 6px; }
+    .live-badge { background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; }
+    .live-dot { width: 7px; height: 7px; background-color: #25d366; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+
+    /* KONTAINER SCROLL TRANSAKSI */
+    .buyers-container { height: 260px; overflow: hidden; position: relative; }
+    .buyers-list { display: flex; flex-direction: column; gap: 8px; transition: transform 0.5s ease-in-out; }
+    
+    .buyer-item { background: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #25d366; padding: 10px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease-in; }
+    .buyer-info { display: flex; flex-direction: column; gap: 2px; }
+    .buyer-phone { font-weight: bold; font-size: 13px; color: #222; }
+    .buyer-package { font-size: 11px; color: #666; }
+    .buyer-time { font-size: 11px; font-weight: 600; color: #2e7d32; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -80,12 +100,36 @@
     <button onclick="location.reload()" style="background: #007bff;">Selesai / Transaksi Baru</button>
   </div>
 
+  <!-- CONTAINER DAFTAR PEMBELI HARI INI -->
+  <div class="buyers-card">
+    <div class="buyers-header">
+      <h3>🔥 Pembeli Hari Ini</h3>
+      <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+    </div>
+    <div class="buyers-container">
+      <div class="buyers-list" id="buyers-list">
+        <div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">⏳ Memuat daftar pembeli...</div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
     let activeOrderId = "";
     let activeNomor = "";
     let activePaket = "";
     let timerCek = null;
+    let currentBuyers = [];
+    let scrollIndex = 0;
+    let scrollInterval = null;
+
+    // FUNGSI SENSOR 5 ANGKA TERAKHIR NOMOR HP
+    function sensorNomor(nomor) {
+      if (!nomor) return "-";
+      let bersih = nomor.toString().trim();
+      if (bersih.length <= 5) return "xxxxx";
+      return bersih.slice(0, -5) + "xxxxx";
+    }
 
     // FUNGSI RAPIKAN NOMOR HP LANGSUNG SAAT KETIK
     function formatNomorRealtime(input) {
@@ -101,8 +145,9 @@
       input.value = bersih;
     }
 
-    // AMBIL DAFTAR PAKET SAAT HALAMAN DIBUKA
+    // AMBIL DAFTAR PAKET & DAFTAR PEMBELI SAAT HALAMAN DIBUKA
     window.onload = function() {
+      // 1. Ambil Paket
       fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
         .then(data => {
@@ -115,10 +160,9 @@
               opt.value = item;
               opt.innerText = item;
               
-              // JIKA ADA KATA "HABIS", NONTANFAKAN OPSI TERSEBUT
               if (item.toUpperCase().includes("HABIS")) {
                 opt.disabled = true;
-                opt.style.color = "#dc3545"; // Warna Merah
+                opt.style.color = "#dc3545";
               }
               
               selectPaket.appendChild(opt);
@@ -131,7 +175,79 @@
           console.error(err);
           document.getElementById("paket").innerHTML = "<option value=''>Gagal memuat paket</option>";
         });
+
+      // 2. Load Pembeli Hari Ini & Auto Refresh
+      loadPembeli();
+      setInterval(loadPembeli, 10000); // Perbarui data dari Sheet2 setiap 10 detik
     };
+
+    // FUNGSI MEMANGGIL DATA PEMBELI DARI BACKEND
+    function loadPembeli() {
+      fetch(`${SCRIPT_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.pembeli) {
+            currentBuyers = data.pembeli;
+            renderBuyersList();
+          }
+        })
+        .catch(err => console.error("Gagal memuat daftar pembeli:", err));
+    }
+
+    // RENDER / TAMPILKAN DAFTAR PEMBELI DENGAN PERPINDAHAN TRANSAKSI
+    function renderBuyersList() {
+      const container = document.getElementById("buyers-list");
+      if (!currentBuyers || currentBuyers.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">Belum ada transaksi hari ini</div>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      
+      // Buat elemen HTML untuk semua baris pembeli
+      currentBuyers.forEach((item) => {
+        // Kolom Q = Waktu/Tanggal (q), Kolom R = Nomor HP (r), Kolom T = Paket Data (t)
+        let div = document.createElement("div");
+        div.className = "buyer-item";
+        div.innerHTML = `
+          <div class="buyer-info">
+            <span class="buyer-phone">${sensorNomor(item.r)}</span>
+            <span class="buyer-package">📦 ${item.t || '-'}</span>
+          </div>
+          <span class="buyer-time">${item.q || 'Baru saja'}</span>
+        `;
+        container.appendChild(div);
+      });
+
+      // Jika transaksi > 10, jalankan pergeseran otomatis (1 per 1 menghilang & muncul transaksi baru)
+      if (currentBuyers.length > 5 && !scrollInterval) {
+        startAutoScroll();
+      }
+    }
+
+    // ANIMASI TICKER SCROLL UNTUK MEROTASI TRANSAKSI
+    function startAutoScroll() {
+      const container = document.getElementById("buyers-list");
+      
+      scrollInterval = setInterval(() => {
+        if (currentBuyers.length <= 5) return;
+
+        // Pindahkan item teratas ke paling bawah secara lancar
+        let firstChild = container.children[0];
+        if (firstChild) {
+          firstChild.style.marginTop = "-52px";
+          firstChild.style.transition = "margin-top 0.5s ease-in-out, opacity 0.5s ease";
+          firstChild.style.opacity = "0";
+
+          setTimeout(() => {
+            firstChild.style.marginTop = "0px";
+            firstChild.style.opacity = "1";
+            firstChild.style.transition = "none";
+            container.appendChild(firstChild);
+          }, 500);
+        }
+      }, 3000); // Berganti setiap 3 detik
+    }
 
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
@@ -205,6 +321,9 @@
 
           document.getElementById("sec-proses").classList.add("hidden");
           document.getElementById("sec-sukses").classList.remove("hidden");
+
+          // Refresh data pembeli setelah sukses
+          loadPembeli();
         }
       })
       .catch(err => console.error("Error cek status:", err));
