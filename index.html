@@ -46,7 +46,6 @@
     .buyers-table th { padding: 12px 10px; border-bottom: 2px solid #334155; color: #94a3b8; font-weight: 600; }
     .buyers-table td { padding: 12px 10px; border-bottom: 1px solid #334155; color: #f8fafc; vertical-align: middle; }
     
-    /* STYLE UNTUK TAMPILAN SUB-TEKS WAKTU */
     .buyer-time { display: block; font-size: 11px; color: #94a3b8; margin-top: 2px; font-weight: normal; }
 
     /* STATUS SELECT DROPDOWN */
@@ -125,7 +124,7 @@
   <!-- CONTAINER DAFTAR PEMBELI HARI INI (3 KOLOM) -->
   <div class="buyers-card">
     <div class="buyers-header">
-      <h3>🔥Laporan Hari Ini</h3>
+      <h3>🔥 Pembeli Hari Ini</h3>
       <span class="live-badge"><span class="live-dot"></span> LIVE</span>
     </div>
     <div class="table-responsive">
@@ -180,6 +179,7 @@
     let activePaket = "";
     let timerCek = null;
     let previousBuyersJson = "";
+    let localStatusMap = {}; // Menampung status yang diubah manual agar tidak tertimpa auto-refresh
 
     // MENGELUARKAN SUARA
     function bicara(teks) {
@@ -193,20 +193,18 @@
       }
     }
     
-   // SENSOR 4 ANGKA DI TENGAH NOMOR HP
-function sensorNomor(nomor) {
-  if (!nomor) return "-";
-  let bersih = nomor.toString().trim().replace(/[^0-9]/g, "");
-  
-  // Jika panjang nomor terlalu pendek (kurang dari 8 angka), sensor biasa
-  if (bersih.length < 8) return "08xxxxxx";
+    // SENSOR 4 ANGKA DI TENGAH NOMOR HP
+    function sensorNomor(nomor) {
+      if (!nomor) return "-";
+      let bersih = nomor.toString().trim().replace(/[^0-9]/g, "");
+      
+      if (bersih.length < 8) return "08xxxxxx";
 
-  // Ambil 4 angka di depan dan sisanya di belakang
-  let depan = bersih.slice(0, 4);
-  let belakang = bersih.slice(8);
-  
-  return depan + "XXXX" + belakang;
-}
+      let depan = bersih.slice(0, 4);
+      let belakang = bersih.slice(8);
+      
+      return depan + "xxxx" + belakang;
+    }
 
     // FORMAT NOMOR REALTIME
     function formatNomorRealtime(input) {
@@ -430,13 +428,14 @@ function sensorNomor(nomor) {
 
       top10.forEach((item, index) => {
         let tr = document.createElement("tr");
+        let orderId = item.id !== undefined ? item.id : index;
         
-        let currentStatus = item.status || "Pending"; 
+        // Memakai status lokal jika baru saja diubah, atau dari database
+        let currentStatus = localStatusMap[orderId] || item.status || "Pending"; 
         let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
 
-        // Kolom status sekaligus berfungsi sebagai tab pilihan aksi
         let statusHtml = `
-          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${item.id || index}')" ${isSelesai ? 'disabled' : ''}>
+          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${orderId}')" ${isSelesai ? 'disabled' : ''}>
             <option value="Pending" ${!isSelesai ? 'selected' : ''}>● Pending (BON)</option>
             <option value="Selesai" ${isSelesai ? 'selected' : ''}>● Selesai (Lunas)</option>
           </select>
@@ -454,7 +453,7 @@ function sensorNomor(nomor) {
       });
     }
 
-    // FUNGSI UNTUK MERUBAH STATUS DI KOLOM STATUS
+    // FUNGSI PERUBAHAN STATUS & KIRIM KE SERVER/DATABASE
     function ubahStatusAction(selectEl, orderId) {
       let selectedVal = selectEl.value;
 
@@ -462,17 +461,25 @@ function sensorNomor(nomor) {
         let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
         
         if (konfirmasi) {
-          // Kunci Select / Tab agar tidak bisa dibuka lagi
           selectEl.disabled = true;
           selectEl.classList.add("is-selesai");
 
-          // Kirim Pembaruan Status ke Backend jika ada
+          // Simpan status di memori lokal browser
+          localStatusMap[orderId] = "Selesai";
+
+          // Kirim pembaruan status ke Backend (Cloudflare Worker -> Google Apps Script)
           fetch(`${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`, {
             method: "GET"
-          }).catch(err => console.error("Gagal update status:", err));
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log("Status berhasil disimpan di Google Sheets (Kolom U):", data);
+          })
+          .catch(err => {
+            console.error("Gagal update status di server:", err);
+          });
 
         } else {
-          // Kembalikan ke opsi Pending jika user menekan Batal
           selectEl.value = "Pending";
         }
       }
