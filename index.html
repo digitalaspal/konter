@@ -257,25 +257,46 @@
       const canvas = document.getElementById("canvas-capture");
       const btnSnap = document.getElementById("btn-snap");
 
-      btnSnap.innerText = "🤖 Google AI Membaca Foto...";
+      btnSnap.innerText = "🤖 AI Membaca Kotak...";
       btnSnap.disabled = true;
 
-      // 1. Tangkap gambar saat ini ke dalam Canvas
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // 1. Dapatkan ukuran asli video dan posisi kotak bingkai (.scan-guide)
+      const guide = document.querySelector(".scan-guide");
+      const videoRect = video.getBoundingClientRect();
+      const guideRect = guide.getBoundingClientRect();
 
-      // 2. LANGSUNG MATIKAN KAMERA SEKETIKA (Agar video tidak bergerak lagi)
+      // Hitung skala perbandingan antara tampilan layar dengan ukuran asli video
+      const scaleX = video.videoWidth / videoRect.width;
+      const scaleY = video.videoHeight / videoRect.height;
+
+      // Hitung koordinat dan ukuran kotak bingkai pada video asli
+      const cropX = (guideRect.left - videoRect.left) * scaleX;
+      const cropY = (guideRect.top - videoRect.top) * scaleY;
+      const cropWidth = guideRect.width * scaleX;
+      const cropHeight = guideRect.height * scaleY;
+
+      // 2. Atur ukuran Canvas HANYA sebesar kotak bingkai
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+      const ctx = canvas.getContext("2d");
+
+      // 3. Potong (Crop) hanya area di dalam kotak bingkai
+      ctx.drawImage(
+        video,
+        cropX, cropY, cropWidth, cropHeight, // Koordinat potong dari video
+        0, 0, cropWidth, cropHeight          // Hasil gambar di canvas
+      );
+
+      // 4. LANGSUNG MATIKAN KAMERA (Agar gambar tidak bergerak lagi)
       if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
       }
 
-      // Ambil data gambar Base64
+      // Ambil data gambar yang SUDAH DIPOTONG dalam bentuk Base64
       const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
 
-      // 3. Kirim ke Cloudflare Worker
+      // 5. Kirim potongan gambar ke AI
       fetch(`${SCRIPT_URL}?action=ocr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -283,17 +304,16 @@
       })
       .then(res => res.json())
       .then(data => {
-        // Tutup jendela modal kamera setelah selesai
         document.getElementById("modal-kamera").classList.add("hidden");
-        btnSnap.innerText = "PINDAP / FOTO";
+        btnSnap.innerText = "FOTO NOMORNYA";
         btnSnap.disabled = false;
         
         let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        console.log("Hasil AI:", textResult);
+        console.log("Hasil AI (Dalam Kotak):", textResult);
 
         if (textResult.includes("KOSONG") || !textResult) {
-          bicara("Nomor tidak terdeteksi, silakan foto ulang");
-          alert("Google AI tidak menemukan nomor HP di foto tersebut. Coba foto lebih dekat dan terang.");
+          bicara("Nomor tidak terdeteksi, posisikan nomor pas di dalam kotak");
+          alert("Nomor tidak ditemukan di dalam kotak bingkai. Pastikan nomor berada tepat di dalam garis hijau.");
         } else {
           ekstrakDanFilterNomor(textResult);
         }
@@ -301,13 +321,13 @@
       .catch(err => {
         console.error("Error AI:", err);
         document.getElementById("modal-kamera").classList.add("hidden");
-        btnSnap.innerText = "PINDAP / FOTO";
+        btnSnap.innerText = "FOTO NOMORNYA";
         btnSnap.disabled = false;
         
         bicara("Gagal membaca foto");
-        alert("Gagal terhubung ke AI. Pastikan jaringan internet stabil.");
+        alert("Gagal terhubung ke AI. Pastikan koneksi internet lancar.");
       });
-    }    
+    }
 
     // EKSTRAKSI NOMOR HP DAN POP-UP PILIHAN
     function ekstrakDanFilterNomor(teksMentah) {
