@@ -5,71 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Konter Ardaf Store</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #f0f2f5; margin: 0; }
-    .card { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
-    .header-box { background: #e8f5e9; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-    .header-box h2 { color: #2e7d32; margin: 0 0 5px 0; font-size: 18px; }
-    .header-box p { color: #555; margin: 0; font-size: 12px; line-height: 1.4; }
-    label { display: block; text-align: left; font-weight: bold; font-size: 13px; margin: 12px 0 5px 0; color: #333; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #0f172a; color: #f8fafc; margin: 0; }
+    .card { background: #1e293b; padding: 25px; border-radius: 15px; width: 100%; max-width: 480px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); box-sizing: border-box; }
+    .header-box { background: #064e3b; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    .header-box h2 { color: #34d399; margin: 0 0 5px 0; font-size: 18px; }
+    .header-box p { color: #cbd5e1; margin: 0; font-size: 12px; line-height: 1.4; }
+    label { display: block; text-align: left; font-weight: bold; font-size: 13px; margin: 12px 0 5px 0; color: #cbd5e1; }
     
     /* INPUT GROUP DENGAN TOMBOL KAMERA */
     .input-group { display: flex; gap: 8px; }
-    .btn-camera { width: auto; padding: 0 14px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0; white-space: nowrap; }
-    .btn-camera:hover { background: #0056b3; }
+    .btn-camera { width: auto; padding: 0 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0; white-space: nowrap; }
+    .btn-camera:hover { background: #1d4ed8; }
 
     input, select, button { width: 100%; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-    input, select { border: 1px solid #ccc; outline: none; }
-    input:focus, select:focus { border-color: #25d366; }
-    button { background: #25d366; color: white; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
-    button:hover { background: #1eb857; }
+    input, select { border: 1px solid #475569; background: #0f172a; color: #fff; outline: none; }
+    input:focus, select:focus { border-color: #10b981; }
+    button { background: #10b981; color: white; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+    button:hover { background: #059669; }
     .hidden { display: none !important; }
-    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #25d366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+    .spinner { border: 4px solid #334155; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     /* STYLE STIKER RINCIAN SUKSES */
-    .receipt-box { background: #f8f9fa; border: 1px dashed #25d366; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; }
+    .receipt-box { background: #0f172a; border: 1px dashed #10b981; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; }
     .receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
     .receipt-row:last-child { margin-bottom: 0; }
-    .receipt-label { color: #666; font-weight: 500; }
-    .receipt-val { color: #222; font-weight: bold; word-break: break-all; text-align: right; }
+    .receipt-label { color: #94a3b8; font-weight: 500; }
+    .receipt-val { color: #f8fafc; font-weight: bold; word-break: break-all; text-align: right; }
 
-    /* STYLE DAFTAR PEMBELI HARI INI */
-    .buyers-card { background: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; margin-top: 20px; }
-    .buyers-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 12px; }
-    .buyers-header h3 { margin: 0; font-size: 15px; color: #1b5e20; display: flex; align-items: center; gap: 6px; }
-    .live-badge { background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; }
-    .live-dot { width: 7px; height: 7px; background-color: #25d366; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+    /* STYLE DAFTAR PEMBELI TABEL DARKLIGHT (4 KOLOM) */
+    .buyers-card { background: #1e293b; padding: 20px; border-radius: 15px; width: 100%; max-width: 700px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); box-sizing: border-box; margin-top: 20px; }
+    .buyers-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 12px; margin-bottom: 15px; }
+    .buyers-header h3 { margin: 0; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .live-badge { background: #0284c7; color: #ffffff; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; }
+    .live-dot { width: 7px; height: 7px; background-color: #22c55e; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
-    /* KONTEN STATIS */
-    .buyers-container { width: 100%; position: relative; max-height: 550px;}
-    .buyers-list { display: flex; flex-direction: column; gap: 8px; }
-    .buyer-item { background: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #25d366; padding: 5px 5px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .buyer-info { display: flex; flex-direction: column; gap: 2px; }
-    .buyer-phone { font-weight: bold; font-size: 13px; color: #222; }
-    .buyer-package { font-size: 11px; color: #666; }
-    .buyer-time { font-size: 11px; font-weight: 600; color: #2e7d32; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; }
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .buyers-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    .buyers-table th { padding: 12px 10px; border-bottom: 2px solid #334155; color: #94a3b8; font-weight: 600; }
+    .buyers-table td { padding: 12px 10px; border-bottom: 1px solid #334155; color: #f8fafc; vertical-align: middle; }
     
-    @keyframes newItemFade {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    /* STATUS SELECT DROPDOWN */
+    .status-select { padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #f59e0b; font-weight: bold; cursor: pointer; width: auto; margin: 0; }
+    .status-select.is-selesai { color: #10b981; background: #064e3b; border-color: #10b981; }
+    .status-select:disabled { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: #10b981; cursor: not-allowed; opacity: 0.9; }
 
     /* MODAL KAMERA & POPUP PILIHAN NOMOR */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 15px; box-sizing: border-box; }
-    .modal-overlay:not(.hidden) {
-      display: flex;
-    }
-    .modal-content { background: white; border-radius: 15px; padding: 20px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+    .modal-overlay:not(.hidden) { display: flex; }
+    .modal-content { background: #1e293b; border-radius: 15px; padding: 20px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
     .webcam-box { position: relative; width: 100%; height: 220px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
     .webcam-box video { width: 100%; height: 100%; object-fit: cover; }
-    .scan-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 60px; border: 2px dashed #25d366; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4); }
-    .btn-take-photo { background: #25d366; margin-top: 0; padding: 14px; font-size: 16px; }
-    .btn-close-modal { background: #dc3545; margin-top: 10px; }
+    .scan-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 60px; border: 2px dashed #10b981; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4); }
+    .btn-take-photo { background: #10b981; margin-top: 0; padding: 14px; font-size: 16px; }
+    .btn-close-modal { background: #ef4444; margin-top: 10px; }
     
-    /* POPUP PILIHAN NOMOR BANYAK */
-    .phone-option-btn { background: #f0fdf4; color: #166534; border: 2px solid #22c55e; margin-top: 10px; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; transition: 0.2s; }
-    .phone-option-btn:hover { background: #dcfce7; }
+    .phone-option-btn { background: #064e3b; color: #34d399; border: 1px solid #10b981; margin-top: 10px; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; transition: 0.2s; }
+    .phone-option-btn:hover { background: #047857; }
   </style>
 </head>
 <body>
@@ -78,7 +71,7 @@
   <div class="card" id="sec-form">
     <div class="header-box">
       <h2>⚡BELI ONLINE ARDAF STORE</h2>
-      <p>Untuk membeli Masukkan nomor HP & pilih paket, pesanan akan langsung diproses Admin.</p>
+      <p>Masukkan nomor HP & pilih paket, pesanan akan langsung diproses Admin.</p>
     </div>
 
     <label for="nomor">Nomor HP Tujuan:</label>
@@ -100,13 +93,13 @@
     <h3>⏳ Sedang Diproses</h3>
     <div class="spinner"></div>
     <p>Data telah terkirim ke Admin.</p>
-    <p style="font-size: 12px; color: #666;">Mohon tunggu, status halaman ini akan otomatis berganti setelah paket berhasil diisi.</p>
+    <p style="font-size: 12px; color: #94a3b8;">Mohon tunggu, status halaman ini akan otomatis berganti setelah paket berhasil diisi.</p>
   </div>
 
   <!-- LAYER 3: DISPLAY SUKSES + RINCIAN -->
   <div class="card hidden" id="sec-sukses">
-    <h1 style="color: #25d366; margin-bottom: 5px;">✅ BERHASIL!</h1>
-    <p style="margin-top: 0; font-size: 14px; color: #555;">Paket data telah berhasil diaktifkan.</p>
+    <h1 style="color: #10b981; margin-bottom: 5px;">✅ BERHASIL!</h1>
+    <p style="margin-top: 0; font-size: 14px; color: #cbd5e1;">Paket data telah berhasil diaktifkan.</p>
     
     <div class="receipt-box">
       <div class="receipt-row">
@@ -123,26 +116,38 @@
       </div>
     </div>
 
-    <button onclick="location.reload()" style="background: #007bff;">Selesai / Transaksi Baru</button>
+    <button onclick="location.reload()" style="background: #2563eb;">Selesai / Transaksi Baru</button>
   </div>
 
-  <!-- CONTAINER DAFTAR PEMBELI HARI INI -->
+  <!-- CONTAINER DAFTAR PEMBELI HARI INI (4 KOLOM) -->
   <div class="buyers-card">
     <div class="buyers-header">
       <h3>🔥 Pembeli Hari Ini</h3>
       <span class="live-badge"><span class="live-dot"></span> LIVE</span>
     </div>
-    <div class="buyers-container">
-      <div class="buyers-list" id="buyers-list">
-        <div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">⏳ Memuat daftar pembeli...</div>
-      </div>
+    <div class="table-responsive">
+      <table class="buyers-table">
+        <thead>
+          <tr>
+            <th>Nomor HP</th>
+            <th>Paket</th>
+            <th>Waktu</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="buyers-list">
+          <tr>
+            <td colspan="4" style="text-align:center; color:#94a3b8;">⏳ Memuat daftar pembeli...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
   <!-- MODAL KAMERA SCAN -->
   <div class="modal-overlay hidden" id="modal-kamera">
     <div class="modal-content">
-      <h3 style="margin-top:0; color:#333;">📸 Arahkan kamera dekat dengan nomor</h3>
+      <h3 style="margin-top:0; color:#f8fafc;">📸 Arahkan kamera dekat nomor</h3>
       <div class="webcam-box">
         <video id="webcam" autoplay playsinline></video>
         <div class="scan-guide"></div>
@@ -156,8 +161,8 @@
   <!-- MODAL 2: POP-UP SELEKSI BANYAK NOMOR -->
   <div class="modal-overlay hidden" id="modal-pilihan">
     <div class="modal-content">
-      <h3 style="margin-top:0; color:#1b5e20;">📱 Pilih Nomor HP Pembeli:</h3>
-      <p style="font-size:12px; color:#666; margin-bottom:15px;">Ditemukan beberapa nomor. Tindis nomor yang benar dibawah ini:</p>
+      <h3 style="margin-top:0; color:#34d399;">📱 Pilih Nomor HP Pembeli:</h3>
+      <p style="font-size:12px; color:#cbd5e1; margin-bottom:15px;">Ditemukan beberapa nomor. Tekan nomor yang benar di bawah ini:</p>
       <div id="container-pilihan-nomor"></div>
       <button class="btn-close-modal" onclick="tutupModalPilihan()" style="margin-top:15px;">Batal</button>
     </div>
@@ -174,22 +179,19 @@
     let timerCek = null;
     let previousBuyersJson = "";
 
-// FUNGSI UNTUK MENGELUARKAN SUARA KONFIRMASI
+    // MENGELUARKAN SUARA
     function bicara(teks) {
       if ('speechSynthesis' in window) {
-        // Hentikan suara sebelumnya jika masih ada yang berjalan
         window.speechSynthesis.cancel();
-
         let ucapan = new SpeechSynthesisUtterance(teks);
-        ucapan.lang = 'id-ID'; // Bahasa Indonesia
-        ucapan.rate = 0.9;     // Kecepatan bicara sedikit diperlambat agar jelas untuk Ibu
+        ucapan.lang = 'id-ID';
+        ucapan.rate = 0.9;
         ucapan.pitch = 1.0;
-
         window.speechSynthesis.speak(ucapan);
       }
     }
     
-    // FUNGSI SENSOR 5 ANGKA TERAKHIR NOMOR HP
+    // SENSOR NOMOR HP
     function sensorNomor(nomor) {
       if (!nomor) return "-";
       let bersih = nomor.toString().trim().replace(/[^0-9]/g, "");
@@ -197,42 +199,33 @@
       return bersih.slice(0, -5) + "xxxxx";
     }
 
-    // FUNGSI RAPIKAN NOMOR HP LANGSUNG SAAT KETIK
+    // FORMAT NOMOR REALTIME
     function formatNomorRealtime(input) {
       let val = input.value;
       let bersih = val.replace(/[^0-9]/g, "");
-      
       if (bersih.startsWith("62")) {
         bersih = "0" + bersih.substring(2);
       } else if (bersih.startsWith("8")) {
         bersih = "0" + bersih;
       }
-
       input.value = bersih;
     }
 
-    /* --- FUNGSI KAMERA SCAN & OCR AI --- */
+    /* --- KAMERA SCAN & OCR --- */
     function bukaKamera() {
       const modal = document.getElementById("modal-kamera");
       const video = document.getElementById("webcam");
-      
-      if (!modal || !video) {
-        alert("Elemen modal kamera tidak ditemukan di HTML!");
-        return;
-      }
+      if (!modal || !video) return;
 
       modal.classList.remove("hidden");
-
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      })
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(stream => {
         videoStream = stream;
         video.srcObject = stream;
       })
       .catch(err => {
         console.error("Gagal akses kamera:", err);
-        alert("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
+        alert("Gagal membuka kamera.");
         tutupKamera();
       });
     }
@@ -247,7 +240,7 @@
       
       const btnSnap = document.getElementById("btn-snap");
       if (btnSnap) {
-        btnSnap.innerText = "PINDAP / FOTO";
+        btnSnap.innerText = "FOTO NOMORNYA";
         btnSnap.disabled = false;
       }
     }
@@ -260,43 +253,31 @@
       btnSnap.innerText = "🤖 AI Membaca Kotak...";
       btnSnap.disabled = true;
 
-      // 1. Dapatkan ukuran asli video dan posisi kotak bingkai (.scan-guide)
       const guide = document.querySelector(".scan-guide");
       const videoRect = video.getBoundingClientRect();
       const guideRect = guide.getBoundingClientRect();
 
-      // Hitung skala perbandingan antara tampilan layar dengan ukuran asli video
       const scaleX = video.videoWidth / videoRect.width;
       const scaleY = video.videoHeight / videoRect.height;
 
-      // Hitung koordinat dan ukuran kotak bingkai pada video asli
       const cropX = (guideRect.left - videoRect.left) * scaleX;
       const cropY = (guideRect.top - videoRect.top) * scaleY;
       const cropWidth = guideRect.width * scaleX;
       const cropHeight = guideRect.height * scaleY;
 
-      // 2. Atur ukuran Canvas HANYA sebesar kotak bingkai
       canvas.width = cropWidth;
       canvas.height = cropHeight;
       const ctx = canvas.getContext("2d");
 
-      // 3. Potong (Crop) hanya area di dalam kotak bingkai
-      ctx.drawImage(
-        video,
-        cropX, cropY, cropWidth, cropHeight, // Koordinat potong dari video
-        0, 0, cropWidth, cropHeight          // Hasil gambar di canvas
-      );
+      ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-      // 4. LANGSUNG MATIKAN KAMERA (Agar gambar tidak bergerak lagi)
       if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
       }
 
-      // Ambil data gambar yang SUDAH DIPOTONG dalam bentuk Base64
       const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
 
-      // 5. Kirim potongan gambar ke AI
       fetch(`${SCRIPT_URL}?action=ocr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -309,27 +290,23 @@
         btnSnap.disabled = false;
         
         let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        console.log("Hasil AI (Dalam Kotak):", textResult);
 
         if (textResult.includes("KOSONG") || !textResult) {
-          bicara("Nomor tidak terdeteksi, posisikan nomor pas di dalam kotak");
-          alert("Nomor tidak ditemukan di dalam kotak bingkai. Pastikan nomor berada tepat di dalam garis hijau.");
+          bicara("Nomor tidak terdeteksi");
+          alert("Nomor tidak ditemukan di dalam kotak bingkai.");
         } else {
           ekstrakDanFilterNomor(textResult);
         }
       })
       .catch(err => {
-        console.error("Error AI:", err);
+        console.error(err);
         document.getElementById("modal-kamera").classList.add("hidden");
         btnSnap.innerText = "FOTO NOMORNYA";
         btnSnap.disabled = false;
-        
         bicara("Gagal membaca foto");
-        alert("Gagal terhubung ke AI. Pastikan koneksi internet lancar.");
       });
     }
 
-    // EKSTRAKSI NOMOR HP DAN POP-UP PILIHAN
     function ekstrakDanFilterNomor(teksMentah) {
       let cleanedText = teksMentah.replace(/[^0-9\s]/g, " ");
       let matches = cleanedText.match(/(08\d{8,11}|628\d{7,10})/g) || [];
@@ -340,7 +317,7 @@
       }))];
 
       if (uniqueNumbers.length === 0) {
-        alert("Nomor HP tidak terdeteksi dari foto. Coba foto lebih dekat dan terang.");
+        alert("Nomor HP tidak terdeteksi dari foto.");
       } else if (uniqueNumbers.length === 1) {
         pilihNomor(uniqueNumbers[0]);
       } else {
@@ -371,11 +348,7 @@
       const inputEl = document.getElementById("nomor");
       inputEl.value = nomor;
       formatNomorRealtime(inputEl);
-
-      // Ejaan per digit angka agar mudah didengar (misal: 0-8-1-2)
       let ejaanNomor = nomor.split("").join(" ");
-      
-      // HP Mengeluarkan Suara
       bicara(`Nomor terdeteksi: ${ejaanNomor}`);
     }
 
@@ -383,7 +356,7 @@
       document.getElementById("modal-pilihan").classList.add("hidden");
     }
 
-    /* --- PROSES WEB UTAMA --- */
+    /* --- UTAMA & LOAD PEMBELI --- */
     window.onload = function() {
       fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
@@ -399,9 +372,8 @@
               
               if (item.toUpperCase().includes("HABIS")) {
                 opt.disabled = true;
-                opt.style.color = "#dc3545";
+                opt.style.color = "#ef4444";
               }
-              
               selectPaket.appendChild(opt);
             });
           } else {
@@ -421,34 +393,26 @@
       if (!BUYERS_URL || BUYERS_URL.includes("URL_APPS_SCRIPT_ATAU_WORKER")) return;
 
       fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
-        .then(res => {
-          if (!res.ok) throw new Error("Gagal mengambil data");
-          return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
           if (data && Array.isArray(data.pembeli)) {
             let currentJson = JSON.stringify(data.pembeli);
-            
             if (currentJson !== previousBuyersJson) {
-              renderBuyersList(data.pembeli, previousBuyersJson !== "");
+              renderBuyersList(data.pembeli);
               previousBuyersJson = currentJson;
             }
           }
         })
         .catch(err => {
           console.error("Error load pembeli:", err);
-          const container = document.getElementById("buyers-list");
-          if (previousBuyersJson === "") {
-            container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #d32f2f;">Gagal terhubung ke data pembeli</div>`;
-          }
         });
     }
 
-    function renderBuyersList(pembeliList, isUpdate) {
+    function renderBuyersList(pembeliList) {
       const container = document.getElementById("buyers-list");
       
       if (!pembeliList || pembeliList.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">Belum ada transaksi hari ini</div>`;
+        container.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada transaksi hari ini</td></tr>`;
         return;
       }
 
@@ -456,22 +420,51 @@
       const top10 = pembeliList.slice(0, 10);
 
       top10.forEach((item, index) => {
-        let div = document.createElement("div");
-        div.className = "buyer-item";
+        let tr = document.createElement("tr");
         
-        if (isUpdate && index === 0) {
-          div.style.animation = "newItemFade 0.5s ease-out";
-        }
+        let currentStatus = item.status || "Pending"; 
+        let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
 
-        div.innerHTML = `
-          <div class="buyer-info">
-            <span class="buyer-phone">${sensorNomor(item.r)}</span>
-            <span class="buyer-package">📦 ${item.t || '-'}</span>
-          </div>
-          <span class="buyer-time">${item.q || 'Baru saja'}</span>
+        // Kolom status sekaligus berfungsi sebagai tab pilihan aksi
+        let statusHtml = `
+          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${item.id || index}')" ${isSelesai ? 'disabled' : ''}>
+            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● Pending (BON)</option>
+            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● Selesai (Lunas)</option>
+          </select>
         `;
-        container.appendChild(div);
+
+        tr.innerHTML = `
+          <td><strong>${sensorNomor(item.r)}</strong></td>
+          <td>📦 ${item.t || '-'}</td>
+          <td>${item.q || 'Baru saja'}</td>
+          <td>${statusHtml}</td>
+        `;
+        container.appendChild(tr);
       });
+    }
+
+    // FUNGSI UNTUK MERUBAH STATUS DI KOLOM STATUS
+    function ubahStatusAction(selectEl, orderId) {
+      let selectedVal = selectEl.value;
+
+      if (selectedVal === "Selesai") {
+        let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
+        
+        if (konfirmasi) {
+          // Kunci Select / Tab agar tidak bisa dibuka lagi
+          selectEl.disabled = true;
+          selectEl.classList.add("is-selesai");
+
+          // Kirim Pembaruan Status ke Backend jika ada
+          fetch(`${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`, {
+            method: "GET"
+          }).catch(err => console.error("Gagal update status:", err));
+
+        } else {
+          // Kembalikan ke opsi Pending jika user menekan Batal
+          selectEl.value = "Pending";
+        }
+      }
     }
 
     function prosesBeli() {
@@ -479,17 +472,12 @@
       let paketInput = document.getElementById("paket").value;
 
       if (!nomorInput || nomorInput.length < 10) { 
-        alert("Nomor HP tidak valid! Masukkan nomor dengan benar."); 
+        alert("Nomor HP tidak valid!"); 
         return; 
       }
 
       if (!paketInput || paketInput.includes("Gagal") || paketInput.includes("Memuat")) {
         alert("Pilihan paket belum siap!");
-        return;
-      }
-
-      if (paketInput.toUpperCase().includes("HABIS")) {
-        alert("Maaf, paket data ini sedang HABIS!");
         return;
       }
 
@@ -521,7 +509,7 @@
       })
       .catch(err => {
         console.error(err);
-        alert("Gagal terhubung ke sistem. Silakan coba lagi.");
+        alert("Gagal terhubung ke sistem.");
         btn.disabled = false;
         btn.style.opacity = "1";
         btn.innerText = "BELI SEKARANG";
