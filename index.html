@@ -453,7 +453,7 @@
       });
     }
 
-  // FUNGSI PERUBAHAN STATUS (PASTI BERHASIL DENGAN GET METHOD)
+// FUNGSI PERUBAHAN STATUS (DIKIRIM LANGSUNG KE BUYERS_URL / SHEET2)
 function ubahStatusAction(selectEl, orderId) {
   let selectedVal = selectEl.value;
 
@@ -464,26 +464,26 @@ function ubahStatusAction(selectEl, orderId) {
       selectEl.disabled = true;
       selectEl.classList.add("is-selesai");
 
-      // 1. Simpan sementara di memori browser agar tidak tertimpa saat auto-refresh
+      // 1. Simpan di memori lokal browser agar tidak tertimpa saat auto-refresh 5 detik
       localStatusMap[orderId] = "Selesai";
 
-      // 2. Kirim via GET dengan URL Query Params
-      const updateUrl = `${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`;
+      // 2. Kirim perintah updateStatus LANGSUNG ke BUYERS_URL (Tempat Sheet2 transaksi)
+      const targetUrl = `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`;
 
-      fetch(updateUrl, {
+      fetch(targetUrl, {
         method: "GET"
       })
       .then(res => res.json())
       .then(data => {
-        console.log("Respon update status:", data);
+        console.log("Respon update status dari BUYERS_URL:", data);
         if (data.result === "success" || data.status === "success") {
-          console.log("✅ BERHASIL MENGUBAH STATUS DI KOLOM U SHEETS!");
+          console.log("✅ BERHASIL MENGUBAH STATUS DI SHEET2 KOLOM U!");
         } else {
-          alert("⚠️ Gagal memperbarui di Sheet. Pesan server: " + (data.message || "Data tidak ditemukan"));
+          alert("⚠️ Nomor HP tidak ditemukan di Kolom R Sheet2.");
         }
       })
       .catch(err => {
-        console.error("Gagal terhubung ke server:", err);
+        console.error("Gagal update status di BUYERS_URL:", err);
       });
 
     } else {
