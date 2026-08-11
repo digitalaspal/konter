@@ -453,7 +453,7 @@
       });
     }
 
-   // FUNGSI UNTUK MERUBAH STATUS DI KOLOM STATUS & SIMPAN KE SHEET (KOLOM U)
+  // FUNGSI PERUBAHAN STATUS (DENGAN METODE POST PASTI TERSIMPAN)
 function ubahStatusAction(selectEl, orderId) {
   let selectedVal = selectEl.value;
 
@@ -464,24 +464,32 @@ function ubahStatusAction(selectEl, orderId) {
       selectEl.disabled = true;
       selectEl.classList.add("is-selesai");
 
-      // 1. Simpan sementara di memori browser agar tampilan tidak kembali ke Pending saat auto-refresh 5 detik
+      // 1. Simpan di memori lokal browser
       localStatusMap[orderId] = "Selesai";
 
-      // 2. Kirim perintah updateStatus ke Backend dengan menyertakan Nomor HP (orderId)
-      fetch(`${SCRIPT_URL}?action=updateStatus&id=${encodeURIComponent(orderId)}&status=Selesai`, {
-        method: "GET"
+      // 2. Kirim via POST JSON langsung ke backend
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: "updateStatus",
+          id: orderId,       // Mengirimkan Nomor HP
+          status: "Selesai"  // Status baru
+        })
       })
       .then(res => res.json())
       .then(data => {
-        console.log("Respon dari Server:", data);
-        if (data.result === "success") {
-          console.log("✅ Berhasil memperbarui status di Google Sheets Kolom U!");
+        console.log("Respon update status:", data);
+        if (data.status === "success" || data.result === "success") {
+          console.log("✅ BERHASIL MENGUBAH STATUS DI KOLOM U SHEETS!");
         } else {
-          alert("⚠️ Peringatan: Nomor HP tidak ditemukan di Kolom R Google Sheets.");
+          alert("⚠️ Gagal memperbarui di Sheet. Pesan server: " + (data.message || "Data tidak ditemukan"));
         }
       })
       .catch(err => {
-        console.error("Gagal update status di server:", err);
+        console.error("Gagal terhubung ke server:", err);
       });
 
     } else {
@@ -489,7 +497,6 @@ function ubahStatusAction(selectEl, orderId) {
     }
   }
 }
-
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
       let paketInput = document.getElementById("paket").value;
