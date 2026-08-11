@@ -198,24 +198,7 @@
       input.value = bersih;
     }
 
-    /* --- LOGIKA FITUR SCAN KAMERA & OCR AI --- */
-    function bukaKamera() {
-      const modal = document.getElementById("modal-kamera");
-      const video = document.getElementById("webcam");
-      modal.classList.remove("hidden");
-
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      })
-      .then(stream => {
-        videoStream = stream;
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        alert("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
-        tutupKamera();
-      });
-    }
+  
 
     function tutupKamera() {
       if (videoStream) {
@@ -227,12 +210,12 @@
       document.getElementById("btn-snap").disabled = false;
     }
 
-    function ambilDanProsesFoto() {
+  function ambilDanProsesFoto() {
       const video = document.getElementById("webcam");
       const canvas = document.getElementById("canvas-capture");
       const btnSnap = document.getElementById("btn-snap");
 
-      btnSnap.innerText = "⏳ AI Membaca Nomor...";
+      btnSnap.innerText = "🤖 Google AI Membaca Foto...";
       btnSnap.disabled = true;
 
       canvas.width = video.videoWidth;
@@ -240,18 +223,34 @@
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Proses dengan Tesseract AI
-      Tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) })
-        .then(({ data: { text } }) => {
-          tutupKamera();
-          ekstrakDanFilterNomor(text);
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Gagal membaca gambar. Silakan coba foto ulang.");
-          tutupKamera();
-        });
-    }
+      // Ambil string gambar Base64
+      const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
+
+      // Kirim gambar ke Cloudflare Worker
+      fetch(`${SCRIPT_URL}?action=ocr`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64Image })
+      })
+      .then(res => res.json())
+      .then(data => {
+        tutupKamera();
+        
+        let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        console.log("Hasil AI:", textResult);
+
+        if (textResult.includes("KOSONG") || !textResult) {
+          alert("Google AI tidak menemukan nomor HP di foto tersebut. Coba foto lebih dekat dan terang.");
+        } else {
+          ekstrakDanFilterNomor(textResult);
+        }
+      })
+      .catch(err => {
+        console.error("Error AI:", err);
+        alert("Gagal terhubung ke AI. Pastikan jaringan internet stabil.");
+        tutupKamera();
+      });
+    }    
 
     // EKSTRAKSI NOMOR HP DAN POP-UP PILIHAN
     function ekstrakDanFilterNomor(teksMentah) {
