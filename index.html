@@ -65,6 +65,30 @@
     
     .phone-option-btn { background: #064e3b; color: #34d399; border: 1px solid #10b981; margin-top: 10px; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; transition: 0.2s; }
     .phone-option-btn:hover { background: #047857; }
+
+    /* STYLE UNTUK TOGGLE INPUT MANUAL */
+.manual-toggle-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+.btn-manual-toggle {
+  background: transparent;
+  color: #38bdf8;
+  border: 1px dashed #38bdf8;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+  font-weight: bold;
+}
+.btn-manual-toggle:hover {
+  background: rgba(56, 189, 248, 0.1);
+}
   </style>
 </head>
 <body>
@@ -82,11 +106,27 @@
       <button class="btn-camera" type="button" onclick="bukaKamera()">📷 Scan</button>
     </div>
 
-    <label for="paket">Pilih Paket Data:</label>
-    <select id="paket">
-      <option value="">⏳ Memuat daftar paket...</option>
-    </select>
+   <!-- BAGIAN PEMILIHAN PAKET DATA -->
+<div class="manual-toggle-box">
+  <label for="paket" style="margin: 0;">📦 Pilih Paket Data / Pulsa:</label>
+  <!-- Tombol untuk beralih mode manual/dropdown -->
+  <button type="button" class="btn-manual-toggle" id="btn-toggle-manual" onclick="toggleInputManual()">
+    ✏️ Paket Lain / Manual
+  </button>
+</div>
 
+<!-- 1. DROPDOWN PAKET (Default Muncul) -->
+<select id="paket">
+  <option value="">⏳ Memuat pilihan paket...</option>
+</select>
+
+<!-- 2. INPUT MANUAL (Default Tersembunyi) -->
+<div id="container-paket-manual" class="hidden" style="margin-top: 5px;">
+  <input type="text" id="paket-manual" placeholder="Contoh: Paket 20K / Pulsa 20ribu" />
+  <p style="font-size: 11px; color: #fbbf24; margin: 4px 0 0 2px; text-align: left;">
+    *Ketik nama atau nominal paket yang ingin dibeli secara manual.
+  </p>
+</div>
     <button onclick="prosesBeli()">BELI SEKARANG</button>
   </div>
 
@@ -172,7 +212,7 @@
   <script>
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
     const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
-
+let isModeManual = false;
     let videoStream = null;
     let activeOrderId = "";
     let activeNomor = "";
@@ -192,7 +232,41 @@
         window.speechSynthesis.speak(ucapan);
       }
     }
+    //togeltombol
+    function toggleInputManual() {
+  const selectPaket = document.getElementById("paket");
+  const containerManual = document.getElementById("container-paket-manual");
+  const inputManual = document.getElementById("paket-manual");
+  const btnToggle = document.getElementById("btn-toggle-manual");
+
+  isModeManual = !isModeManual; // Balikkan status (true/false)
+
+  if (isModeManual) {
+    // Sembunyikan Dropdown, Tampilkan Input Manual
+    selectPaket.classList.add("hidden");
+    containerManual.classList.remove("hidden");
     
+    // Ubah teks tombol penanda
+    btnToggle.innerText = "📋 Pilih dari Daftar";
+    btnToggle.style.borderColor = "#10b981";
+    btnToggle.style.color = "#34d399";
+    
+    // Auto-focus ke input manual
+    inputManual.focus();
+  } else {
+    // Sembunyikan Input Manual, Tampilkan Dropdown
+    selectPaket.classList.remove("hidden");
+    containerManual.classList.add("hidden");
+    
+    // Kembalikan teks tombol
+    btnToggle.innerText = "✏️ Paket Lain / Manual";
+    btnToggle.style.borderColor = "#38bdf8";
+    btnToggle.style.color = "#38bdf8";
+    
+    // Riset nilai input manual
+    inputManual.value = "";
+  }
+}
     // SENSOR 4 ANGKA DI TENGAH NOMOR HP
     function sensorNomor(nomor) {
       if (!nomor) return "-";
@@ -491,54 +565,63 @@ function ubahStatusAction(selectEl, orderId) {
     }
   }
 }
-    function prosesBeli() {
-      let nomorInput = document.getElementById("nomor").value.trim();
-      let paketInput = document.getElementById("paket").value;
+   function prosesBeli() {
+  let nomorInput = document.getElementById("nomor").value.trim();
+  let paketInput = "";
 
-      if (!nomorInput || nomorInput.length < 10) { 
-        alert("Nomor HP tidak valid!"); 
-        return; 
-      }
+  // 1. Cek dari mana nilai paket diambil (Manual vs Dropdown)
+  if (isModeManual) {
+    paketInput = document.getElementById("paket-manual").value.trim();
+  } else {
+    paketInput = document.getElementById("paket").value;
+  }
 
-      if (!paketInput || paketInput.includes("Gagal") || paketInput.includes("Memuat")) {
-        alert("Pilihan paket belum siap!");
-        return;
-      }
+  // 2. Validasi Nomor HP
+  if (!nomorInput || nomorInput.length < 10) { 
+    alert("Mohon periksa kembali, nomor HP belum lengkap!"); 
+    return; 
+  }
 
-      let btn = document.querySelector("button[onclick='prosesBeli()']");
-      if (btn.disabled) return;
+  // 3. Validasi Pilihan Paket
+  if (!paketInput || paketInput.includes("Gagal") || paketInput.includes("Memuat")) {
+    alert("Mohon isi atau pilih nama paket data terlebih dahulu!");
+    return;
+  }
 
-      btn.disabled = true;
-      btn.style.opacity = "0.6";
-      btn.innerText = "MENGIRIM PESANAN...";
+  let btn = document.querySelector("button[onclick='prosesBeli()']");
+  if (btn.disabled) return;
 
-      fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomorInput)}&paket=${encodeURIComponent(paketInput)}`, {
-        method: "GET",
-        redirect: "follow"
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.result === "success" && data.id) {
-          activeOrderId = data.id;
-          activeNomor = nomorInput;
-          activePaket = paketInput;
-          
-          document.getElementById("sec-form").classList.add("hidden");
-          document.getElementById("sec-proses").classList.remove("hidden");
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+  btn.innerText = "MENGIRIM PESANAN...";
 
-          timerCek = setInterval(cekStatusKetat, 3000);
-        } else {
-          throw new Error("Gagal menyimpan transaksi");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Gagal terhubung ke sistem.");
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.innerText = "BELI SEKARANG";
-      });
+  // 4. Kirim Ke Backend (SCRIPT_URL)
+  fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomorInput)}&paket=${encodeURIComponent(paketInput)}`, {
+    method: "GET",
+    redirect: "follow"
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.result === "success" && data.id) {
+      activeOrderId = data.id;
+      activeNomor = nomorInput;
+      activePaket = paketInput;
+      
+      document.getElementById("sec-form").classList.add("hidden");
+      document.getElementById("sec-proses").classList.remove("hidden");
+
+      timerCek = setInterval(cekStatusKetat, 3000);
+    } else {
+      throw new Error("Gagal menyimpan transaksi");
     }
+  })
+  .catch(err => {
+    alert("Gagal terhubung ke sistem. Periksa koneksi internet Anda.");
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.innerText = "BELI SEKARANG";
+  });
+}
 
     function cekStatusKetat() {
       if (!activeOrderId) return;
