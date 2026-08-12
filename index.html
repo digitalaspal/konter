@@ -14,8 +14,8 @@
     
     /* INPUT GROUP DENGAN TOMBOL KAMERA */
     .input-group { display: flex; gap: 8px; }
-    .btn-camera { width: auto; padding: 0 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0; white-space: nowrap; }
-    .btn-camera:hover { background: #1d4ed8; }
+    .btn-camera { width: auto; padding: 0 14px; background: #9dbb00; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0; white-space: nowrap; }
+    .btn-camera:hover { background: #a0d506; }
 
     input, select, button { width: 100%; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
     input, select { border: 1px solid #475569; background: #0f172a; color: #fff; outline: none; }
@@ -103,12 +103,12 @@
     <label for="nomor">Nomor HP Tujuan:</label>
     <div class="input-group">
       <input type="text" id="nomor" placeholder="Contoh: 08123456789" oninput="formatNomorRealtime(this)">
-      <button class="btn-camera" type="button" onclick="bukaKamera()">📷 Scan</button>
+      <button class="btn-camera" type="button" onclick="bukaKamera()">📷 FOTO NOMOR</button>
     </div>
 
    <!-- BAGIAN PEMILIHAN PAKET DATA -->
 <div class="manual-toggle-box">
-  <label for="paket" style="margin: 0;">📦 Pilih Paket Data / Pulsa:</label>
+  <label for="paket" style="margin: 0;">PILIH PAKET</label>
   <!-- Tombol untuk beralih mode manual/dropdown -->
   <button type="button" class="btn-manual-toggle" id="btn-toggle-manual" onclick="toggleInputManual()">
     ✏️ Paket Lain / Manual
