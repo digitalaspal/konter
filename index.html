@@ -102,7 +102,7 @@
 
     <label for="nomor">Nomor HP Tujuan:</label>
     <div class="input-group">
-      <input type="text" id="nomor" placeholder="Contoh: 08123456789" oninput="formatNomorRealtime(this)">
+      <input type="tel"inputmode="numeric"pattern="[0-9]*" type="text" id="nomor" placeholder="Contoh: 08123456789" oninput="formatNomorRealtime(this)">
       <button class="btn-camera" type="button" onclick="bukaKamera()">📷 FOTO NOMOR</button>
     </div>
 
