@@ -465,24 +465,16 @@
       setInterval(loadPembeli, 20000); 
     };
 
-    function loadPembeli() {
-      if (!BUYERS_URL || BUYERS_URL.includes("https://orderan.digitalaspal.workers.dev/")) return;
-
-      fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
-        .then(res => res.json())
-        .then(data => {
-          if (data && Array.isArray(data.pembeli)) {
-            let currentJson = JSON.stringify(data.pembeli);
-            if (currentJson !== previousBuyersJson) {
-              renderBuyersList(data.pembeli);
-              previousBuyersJson = currentJson;
-            }
-          }
-        })
-        .catch(err => {
-          console.error("Error load pembeli:", err);
-        });
-    }
+function loadPembeli() {
+  fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET" })
+    .then(res => res.json())
+    .then(data => {
+      if (data && Array.isArray(data.pembeli)) {
+        renderBuyersList(data.pembeli);
+      }
+    })
+    .catch(err => console.error("Gagal memuat pembeli:", err));
+}
 
     function renderBuyersList(pembeliList) {
   const container = document.getElementById("buyers-list");
