@@ -485,51 +485,40 @@
     }
 
     function renderBuyersList(pembeliList) {
-      const container = document.getElementById("buyers-list");
-      
-      if (!pembeliList || pembeliList.length === 0) {
-        container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi hari ini</td></tr>`;
-        return;
-      }
+  const container = document.getElementById("buyers-list");
+  if (!pembeliList || pembeliList.length === 0) {
+    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi hari ini</td></tr>`;
+    return;
+  }
 
-      container.innerHTML = "";
-      const top10 = pembeliList.slice(0, 10);
+  container.innerHTML = "";
+  pembeliList.slice(0, 10).forEach((item, index) => {
+    let tr = document.createElement("tr");
+    let nomorRaw = item.r || "";
+    let waktuRaw = item.q || "";
+    let keyUnik = nomorRaw + "_" + waktuRaw + "_" + index;
+    
+    let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
+    let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
 
-      top10.forEach((item, index) => {
-        let tr = document.createElement("tr");
-        
-        // MENGGUNAKAN KEY UNIK TERDEFINISI: Kombinasi ID/Nomor + Waktu
-        let nomorRaw = item.r || "";
-        let waktuRaw = item.q || "";
-        let idUnik = item.id !== undefined && item.id !== "" ? String(item.id) : (nomorRaw + "_" + waktuRaw + "_" + index);
-        
-        let currentStatus = localStatusMap[idUnik] || item.status || "Pending"; 
-        let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
+    let statusHtml = `
+      <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorRaw}', '${waktuRaw}')" ${isSelesai ? 'disabled' : ''}>
+        <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
+        <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
+      </select>
+    `;
 
-        // Escape string untuk penggunaan di atribut HTML
-        let idUnikEscaped = idUnik.replace(/'/g, "\\'");
-        let nomorRawEscaped = nomorRaw.replace(/'/g, "\\'");
-        let waktuRawEscaped = waktuRaw.replace(/'/g, "\\'");
-
-        let statusHtml = `
-          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${idUnikEscaped}', '${nomorRawEscaped}', '${waktuRawEscaped}')" ${isSelesai ? 'disabled' : ''}>
-            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
-            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-          </select>
-        `;
-
-        tr.innerHTML = `
-          <td>
-            <strong>${sensorNomor(nomorRaw)}</strong>
-            <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
-          </td>
-          <td>${item.t || '-'}</td>
-          <td>${statusHtml}</td>
-        `;
-        container.appendChild(tr);
-      });
-    }
-
+    tr.innerHTML = `
+      <td>
+        <strong>${sensorNomor(nomorRaw)}</strong>
+        <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
+      </td>
+      <td>${item.t || '-'}</td>
+      <td>${statusHtml}</td>
+    `;
+    container.appendChild(tr);
+  });
+}
     // FUNGSI PERUBAHAN STATUS (DIKIRIM LANGSUNG KE BUYERS_URL)
     function ubahStatusAction(selectEl, keyUnik, nomorRaw, waktuRaw) {
       let selectedVal = selectEl.value;
