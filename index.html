@@ -434,36 +434,44 @@
 
     /* --- UTAMA & LOAD PEMBELI --- */
     window.onload = function() {
-      fetch(`${SCRIPT_URL}?action=getPaket`, { method: "GET", redirect: "follow" })
-        .then(res => res.json())
-        .then(data => {
-          let selectPaket = document.getElementById("paket");
-          selectPaket.innerHTML = "";
-          
-          if (data.paket && data.paket.length > 0) {
-            data.paket.forEach(item => {
-              let opt = document.createElement("option");
-              opt.value = item;
-              opt.innerText = item;
-              
-              if (item.toUpperCase().includes("HABIS")) {
-                opt.disabled = true;
-                opt.style.color = "#ef4444";
-              }
-              selectPaket.appendChild(opt);
-            });
-          } else {
-            selectPaket.innerHTML = "<option value=''>Belum ada paket tersedia</option>";
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("paket").innerHTML = "<option value=''>Gagal memuat paket</option>";
-        });
+  // Jalankan kedua fetch secara bersamaan (Paralel)
+  Promise.all([
+    fetch(`${SCRIPT_URL}?action=getPaket`),
+    fetch(`${BUYERS_URL}?action=getPembeli`)
+  ])
+  .then(responses => Promise.all(responses.map(res => res.json())))
+  .then(data => {
+    // data[0] adalah hasil getPaket
+    const dataPaket = data[0];
+    // data[1] adalah hasil getPembeli
+    const dataPembeli = data[1];
 
-      loadPembeli();
-      setInterval(loadPembeli, 20000); 
-    };
+    // --- RENDER PAKET ---
+    let selectPaket = document.getElementById("paket");
+    selectPaket.innerHTML = "";
+    if (dataPaket.paket && dataPaket.paket.length > 0) {
+      dataPaket.paket.forEach(item => {
+        let opt = document.createElement("option");
+        opt.value = item;
+        opt.innerText = item;
+        selectPaket.appendChild(opt);
+      });
+    } else {
+      selectPaket.innerHTML = "<option value=''>Paket tidak tersedia</option>";
+    }
+
+    // --- RENDER PEMBELI ---
+    if (dataPembeli && Array.isArray(dataPembeli.pembeli)) {
+      renderBuyersList(dataPembeli.pembeli);
+    }
+  })
+  .catch(err => {
+    console.error("Gagal memuat data awal:", err);
+  });
+
+  // Mulai interval update pembeli setelah load awal sukses
+  setInterval(loadPembeli, 10000); 
+};
 
 function loadPembeli() {
   fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET" })
@@ -512,43 +520,61 @@ function loadPembeli() {
   });
 }
     // FUNGSI PERUBAHAN STATUS (DIKIRIM LANGSUNG KE BUYERS_URL)
-    function ubahStatusAction(selectEl, keyUnik, nomorRaw, waktuRaw) {
-      let selectedVal = selectEl.value;
+function ubahStatusAction(selectEl, keyUnik, nomorRaw, waktuRaw) {
+  let selectedVal = selectEl.value;
 
-      if (selectedVal === "Selesai") {
-        let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
-        
-        if (konfirmasi) {
-          selectEl.disabled = true;
-          selectEl.classList.add("is-selesai");
+  if (selectedVal === "Selesai") {
+    let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
+    
+    if (konfirmasi) {
+      // 1. Kunci sementara & ubah tampilan UI
+      selectEl.disabled = true;
+      selectEl.classList.add("is-selesai");
 
-          // 1. Simpan di memori lokal menggunakan Key Unik
-          localStatusMap[keyUnik] = "Selesai";
+      // 2. Simpan di memori lokal menggunakan Key Unik
+      localStatusMap[keyUnik] = "Selesai";
 
-          // 2. Kirim parameter lengkap ke backend agar sheet dapat mencocokkan baris spesifik
-          const targetUrl = `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(nomorRaw)}&waktu=${encodeURIComponent(waktuRaw)}&status=Selesai`;
+      // 3. Pastikan data nomor/group aman dari spasi berlebih
+      let cleanNomor = nomorRaw ? String(nomorRaw).trim() : "";
+      let cleanWaktu = waktuRaw ? String(waktuRaw).trim() : "";
 
-          fetch(targetUrl, {
-            method: "GET"
-          })
-          .then(res => res.json())
-          .then(data => {
-            console.log("Respon update status dari BUYERS_URL:", data);
-            if (data.result === "success" || data.status === "success") {
-              console.log("✅ BERHASIL MENGUBAH STATUS DI SHEET2!");
-            } else {
-              alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui di Sheet2.");
-            }
-          })
-          .catch(err => {
-            console.error("Gagal update status di BUYERS_URL:", err);
-          });
+      // 4. Kirim parameter lengkap ke backend
+      const targetUrl = `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
 
+      fetch(targetUrl, {
+        method: "GET",
+        redirect: "follow"
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Respon update status dari BUYERS_URL:", data);
+        if (data.result === "success" || data.status === "success") {
+          console.log("✅ BERHASIL MENGUBAH STATUS DI SHEET2!");
         } else {
+          // JIKA GAGAL DI SHEET: Kembalikan status ke Pending & buka kunci
+          alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui di Sheet2.");
+          delete localStatusMap[keyUnik];
+          selectEl.disabled = false;
+          selectEl.classList.remove("is-selesai");
           selectEl.value = "Pending";
         }
-      }
+      })
+      .catch(err => {
+        console.error("Gagal update status di BUYERS_URL:", err);
+        alert("⚠️ Gagal terhubung ke server. Silakan coba lagi.");
+        
+        // Kembalikan ke keadaan semula jika koneksi terputus
+        delete localStatusMap[keyUnik];
+        selectEl.disabled = false;
+        selectEl.classList.remove("is-selesai");
+        selectEl.value = "Pending";
+      });
+
+    } else {
+      selectEl.value = "Pending";
     }
+  }
+}
 
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
