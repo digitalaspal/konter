@@ -466,7 +466,7 @@
     };
 
     function loadPembeli() {
-      if (!BUYERS_URL || BUYERS_URL.includes("URL_APPS_SCRIPT_ATAU_WORKER")) return;
+      if (!BUYERS_URL || BUYERS_URL.includes("https://orderan.digitalaspal.workers.dev/")) return;
 
       fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET", redirect: "follow" })
         .then(res => res.json())
