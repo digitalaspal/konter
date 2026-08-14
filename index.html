@@ -100,6 +100,20 @@
     .btn-manual-toggle:hover {
       background: rgba(56, 189, 248, 0.1);
     }
+    /*ANIMASI LOADING*/
+    /* ANIMASI LOADING 3 TITIK */
+.loading-dots span {
+  animation: blink 1.4s infinite both;
+  font-weight: bold;
+}
+.loading-dots span:nth-child(2) { animation-delay: .2s; }
+.loading-dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes blink {
+  0% { opacity: 0.2; }
+  20% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
   </style>
 </head>
 <body>
@@ -488,41 +502,84 @@
 };
 
 // VARIABEL PENGATURAN PAGINASI
-let allBuyersData = []; // Menampung seluruh data dari server
+let allBuyersData = [];
 let currentPage = 1;
-const itemsPerPage = 10; // Max 10 baris per halaman
+const itemsPerPage = 10;
+let hasMoreServerData = true;
+let isLoadingMore = false;
+let isInitialLoad = true;
+
+// HTML TEMPLATE UNTUK ANIMASI LOADING 3 TITIK
+const loadingDotsHtml = `
+  <tr>
+    <td colspan="3" style="text-align:center; color:#94a3b8; padding: 20px;">
+      Memuat daftar pembeli<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+    </td>
+  </tr>
+`;
 
 function loadPembeli() {
-  if (!BUYERS_URL || BUYERS_URL.includes("URL_APPS_SCRIPT_ATAU_WORKER")) return;
+  // 1. Tampilkan animasi 3 titik jika ini pemuatan pertama kali
+  if (allBuyersData.length === 0 && isInitialLoad) {
+    const container = document.getElementById("buyers-list");
+    if (container) container.innerHTML = loadingDotsHtml;
+    fetchMoreDataFromServer(0, 20);
+  } else {
+    // Refresh 20 data terbaru saja untuk auto-update background
+    fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.pembeli)) {
+          allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
+          renderBuyersList();
+        }
+      })
+      .catch(err => console.error(err));
+  }
+}
 
-  fetch(`${BUYERS_URL}?action=getPembeli`, { method: "GET" })
+function fetchMoreDataFromServer(offset, limit, callback) {
+  isLoadingMore = true;
+  
+  // Efek animasi 3 titik pada tombol Next saat memuat data tambahan
+  const btnNext = document.getElementById("btn-next");
+  if (btnNext) {
+    btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+  }
+
+  fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}`)
     .then(res => res.json())
     .then(data => {
+      isLoadingMore = false;
+      isInitialLoad = false;
+      if (btnNext) btnNext.innerText = "Berikutnya ▶";
+
       if (data && Array.isArray(data.pembeli)) {
-        allBuyersData = data.pembeli; // Simpan semua data di memori browser
-        renderBuyersList(); // Render halaman aktif
+        allBuyersData = allBuyersData.concat(data.pembeli);
+        hasMoreServerData = data.hasMore;
+        renderBuyersList();
+        if (callback) callback();
       }
     })
-    .catch(err => console.error("Error load pembeli:", err));
+    .catch(err => {
+      isLoadingMore = false;
+      isInitialLoad = false;
+      if (btnNext) btnNext.innerText = "Berikutnya ▶";
+      console.error(err);
+    });
 }
 
 function renderBuyersList() {
   const container = document.getElementById("buyers-list");
+  if (!container) return;
+
   if (!allBuyersData || allBuyersData.length === 0) {
-    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi hari ini</td></tr>`;
-    document.getElementById("page-info").innerText = "Halaman 1 dari 1";
+    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
     return;
   }
 
-  // HITUNG INDEX DATA PER HALAMAN
-  const totalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
-  if (currentPage > totalPages) currentPage = totalPages;
-  if (currentPage < 1) currentPage = 1;
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  
-  // Ambil 10 data khusus untuk halaman aktif
   const pageData = allBuyersData.slice(startIndex, endIndex);
 
   container.innerHTML = "";
@@ -531,7 +588,6 @@ function renderBuyersList() {
     let tr = document.createElement("tr");
     let nomorRaw = item.r || "";
     let waktuRaw = item.q || "";
-    // Key unik gabungan agar status tidak bentrok
     let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
     
     let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
@@ -555,18 +611,39 @@ function renderBuyersList() {
     container.appendChild(tr);
   });
 
-  // UPDATE TAMPILAN TOMBOL NAVIGASI HALAMAN
-  document.getElementById("page-info").innerText = `Hal ${currentPage} dari ${totalPages}`;
-  document.getElementById("btn-prev").disabled = (currentPage === 1);
-  document.getElementById("btn-next").disabled = (currentPage === totalPages);
+  // Update Navigasi
+  const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
+  const pageInfo = document.getElementById("page-info");
+  const btnPrev = document.getElementById("btn-prev");
+  const btnNext = document.getElementById("btn-next");
+
+  if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
+  if (btnPrev) btnPrev.disabled = (currentPage === 1);
+  
+  // Tombol Next mati jika sudah di ujung data server
+  const isAtEnd = !hasMoreServerData && (currentPage >= maxLocalPages);
+  if (btnNext) btnNext.disabled = isAtEnd;
 }
 
-// FUNGSI UNTUK PINDAH HALAMAN
 function changePage(direction) {
-  currentPage += direction;
-  renderBuyersList(); // Render ulang tampilan tanpa fetch ulang ke server!
+  if (isLoadingMore) return;
+
+  const nextCalculatedPage = currentPage + direction;
+  const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
+
+  // Jika klik Next dan data lokal habis, panggil batch data berikutnya
+  if (direction === 1 && nextCalculatedPage > maxLocalPages && hasMoreServerData) {
+    fetchMoreDataFromServer(allBuyersData.length, 20, () => {
+      currentPage = nextCalculatedPage;
+      renderBuyersList();
+    });
+  } else {
+    currentPage = nextCalculatedPage;
+    renderBuyersList();
+  }
 }
-    // FUNGSI PERUBAHAN STATUS (DIKIRIM LANGSUNG KE BUYERS_URL)
+
+// FUNGSI PERUBAHAN STATUS (DIKIRIM LANGSUNG KE BUYERS_URL)
 function ubahStatusAction(selectEl, keyUnik, nomorRaw, waktuRaw) {
   let selectedVal = selectEl.value;
 
