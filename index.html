@@ -571,9 +571,9 @@
         adminClickCount = 0;
       }, 1500);
 
-      if (adminClickCount >= 3) {
+      if (adminClickCount >= 2) {
         adminClickCount = 0;
-        let inputPin = prompt("🔑 Masukkan PIN Admin Ardaf Store:");
+        let inputPin = prompt("🔑 Masukkan PIN Admin");
         if (inputPin !== null) {
           savedPin = inputPin.trim();
           localStorage.setItem("ARDAF_ADMIN_PIN", savedPin);
