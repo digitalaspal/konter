@@ -557,24 +557,6 @@
       </tr>
     `;
 
-    function loadPembeli() {
-      if (allBuyersData.length === 0 && isInitialLoad) {
-        const container = document.getElementById("buyers-list");
-        if (container) container.innerHTML = loadingDotsHtml;
-        fetchMoreDataFromServer(0, 20);
-      } else {
-        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20`)
-          .then(res => res.json())
-          .then(data => {
-            if (data && Array.isArray(data.pembeli)) {
-              allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
-              renderBuyersList();
-            }
-          })
-          .catch(err => console.error(err));
-      }
-    }
-
    let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
 let isAdminMode = false;
 let adminClickTimer = null;
@@ -595,10 +577,32 @@ function aktifkanModeAdmin() {
       savedPin = inputPin.trim();
       localStorage.setItem("ARDAF_ADMIN_PIN", savedPin);
       
-      // Reset data dan muat ulang dari server dengan PIN baru
+      // Reset tabel dan reload ulang dengan PIN baru
       allBuyersData = [];
+      currentPage = 1;
+      isInitialLoad = true;
       loadPembeli();
     }
+  }
+}
+
+function loadPembeli() {
+  if (allBuyersData.length === 0 && isInitialLoad) {
+    const container = document.getElementById("buyers-list");
+    if (container) container.innerHTML = loadingDotsHtml;
+    fetchMoreDataFromServer(0, 20);
+  } else {
+    // ⚠️ PASTIKAN PARAMETER PIN SELALU DIKIRIM SAAT REFRESH AUTOMATIS
+    fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.pembeli)) {
+          isAdminMode = data.isAdmin || false;
+          allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
+          renderBuyersList();
+        }
+      })
+      .catch(err => console.error(err));
   }
 }
 
@@ -610,7 +614,7 @@ function fetchMoreDataFromServer(offset, limit, callback) {
     btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
   }
 
-  // Kirim parameter PIN ke backend
+  // ⚠️ PASTIKAN PARAMETER PIN SELALU DIKIRIM SAAT CLIK NEXT/PREV
   fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
     .then(res => res.json())
     .then(data => {
@@ -621,7 +625,7 @@ function fetchMoreDataFromServer(offset, limit, callback) {
       if (data && Array.isArray(data.pembeli)) {
         isAdminMode = data.isAdmin || false;
 
-        // Jika user pernah isi PIN tapi PIN salah di server
+        // Jika user memasukkan PIN tapi salah
         if (savedPin !== "" && !isAdminMode) {
           alert("❌ PIN Admin Salah / Kedaluwarsa!");
           savedPin = "";
@@ -644,23 +648,28 @@ function fetchMoreDataFromServer(offset, limit, callback) {
 
 function renderBuyersList() {
   const container = document.getElementById("buyers-list");
-  const theadTr = document.getElementById("buyers-thead-tr");
-  if (!container) return;
+  const tableEl = document.querySelector(".buyers-table");
+  if (!container || !tableEl) return;
 
-  // 1. UPDATE HEADER TABEL
-  if (theadTr) {
+  // 1. DYNAMIC HEADER TABEL (Menambah Kolom TAGIH jika Admin)
+  let thead = tableEl.querySelector("thead");
+  if (thead) {
     if (isAdminMode) {
-      theadTr.innerHTML = `
-        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
-        <th>TIPE</th>
-        <th>STATUS</th>
-        <th style="color:#10b981;">TAGIH</th>
+      thead.innerHTML = `
+        <tr>
+          <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk PIN Admin">NOMOR 🔒</th>
+          <th>TIPE</th>
+          <th>STATUS</th>
+          <th style="color:#10b981;">TAGIH</th>
+        </tr>
       `;
     } else {
-      theadTr.innerHTML = `
-        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk Login Admin">NOMOR 🔒</th>
-        <th>TIPE</th>
-        <th>STATUS</th>
+      thead.innerHTML = `
+        <tr>
+          <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk PIN Admin">NOMOR 🔒</th>
+          <th>TIPE</th>
+          <th>STATUS</th>
+        </tr>
       `;
     }
   }
@@ -679,15 +688,14 @@ function renderBuyersList() {
 
   pageData.forEach((item, index) => {
     let tr = document.createElement("tr");
-    let nomorRaw = item.r || "";
+    let nomorRaw = item.r || ""; // Nomor WA Asli dari Kolom R (Jika Admin)
+    let empatDigit = item.digit || ""; 
     let waktuRaw = item.q || "";
     let namaRaw = item.t || "KONTER";
     let tipeRaw = item.v || "-";
-    let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
+    let keyUnik = (nomorRaw || empatDigit) + "_" + waktuRaw + "_" + (startIndex + index);
     
-    // FORMAT NAMA 4DIGIT (Contoh: GUSTI 2885)
-    let bersih = nomorRaw.toString().trim().replace(/[^0-9]/g, "");
-    let empatDigit = bersih.length >= 4 ? bersih.slice(-4) : "";
+    // FORMAT TAMPILAN NOMOR (Contoh: KKSP 4694)
     let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
 
     if (tipeRaw.length > 10) {
@@ -704,16 +712,16 @@ function renderBuyersList() {
       </select>
     `;
 
-    // 2. LOGIKA RENDERING KOLOM TAGIH (HANYA DIBUAT JIKA ADMIN SAMA DENGAN TRUE)
+    // 2. RENDERING TOMBOL TAGIH VIA NOMOR WA KOLOM R
     let tdTagihHtml = "";
     if (isAdminMode) {
-      let noWaFormatted = bersih;
-      if (noWaFormatted.startsWith("0")) {
-        noWaFormatted = "62" + noWaFormatted.substring(1);
+      let bersihWA = nomorRaw.replace(/\D/g, '');
+      if (bersihWA.startsWith("0")) {
+        bersihWA = "62" + bersihWA.substring(1);
       }
       
       let pesanWA = encodeURIComponent(`Halo Kaka ${namaRaw}, mengingatkan untuk tagihan pesanan ${tipeRaw} (${waktuRaw}). Terima kasih 🙏`);
-      let linkWA = `https://wa.me/${noWaFormatted}?text=${pesanWA}`;
+      let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
 
       tdTagihHtml = `
         <td>
