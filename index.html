@@ -188,9 +188,12 @@
   <!-- CONTAINER DAFTAR PEMBELI HARI INI (3 KOLOM) -->
   <div class="buyers-card">
     <div class="buyers-header">
-      <h3>🔥Laporan Hari Ini</h3>
-      <span class="live-badge"><span class="live-dot"></span> LIVE</span>
-    </div>
+  <h3>
+    🔥Laporan Hari Ini 
+    <span onclick="aktifkanModeAdmin()" style="cursor: pointer; opacity: 0.6; font-size: 14px;">🔒</span>
+  </h3>
+  <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+</div>
 
     <!-- FORM INPUT MINIMALIS PENAMBAHAN KONTER MANUAL -->
     <div class="konter-form-box" style="background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155;">
@@ -572,22 +575,31 @@
       }
     }
 
-   // Ambil PIN dari memori browser jika sudah pernah login
-let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
+   let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
+let adminClickTimer = null;
 let adminClickCount = 0;
 
 function aktifkanModeAdmin() {
   adminClickCount++;
-  if (adminClickCount >= 3) {
-    let inputPin = prompt("Masukkan PIN Admin Ardaf Store:");
+  
+  // Reset hitungan jika jeda klik lebih dari 1.5 detik
+  clearTimeout(adminClickTimer);
+  adminClickTimer = setTimeout(() => {
+    adminClickCount = 0;
+  }, 1500);
+  
+  if (adminClickCount >= 2) {
+    adminClickCount = 0;
+    
+    let inputPin = prompt("🔑 Masukkan PIN Admin Ardaf Store:");
     if (inputPin) {
       savedPin = inputPin;
       localStorage.setItem("ARDAF_ADMIN_PIN", inputPin);
-      // Refresh data pembeli dengan PIN baru
+      
+      // Reload daftar pembeli dari server untuk verifikasi PIN
       allBuyersData = [];
       loadPembeli();
     }
-    adminClickCount = 0;
   }
 }
 
