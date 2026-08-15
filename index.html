@@ -603,71 +603,72 @@
     }
 
     function renderBuyersList() {
-      const container = document.getElementById("buyers-list");
-      if (!container) return;
+  const container = document.getElementById("buyers-list");
+  if (!container) return;
 
-      if (!allBuyersData || allBuyersData.length === 0) {
-        container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
-        return;
-      }
-
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const pageData = allBuyersData.slice(startIndex, endIndex);
-
-      container.innerHTML = "";
-
-     pageData.forEach((item, index) => {
-  let tr = document.createElement("tr");
-  let nomorRaw = item.r || "";
-  let waktuRaw = item.q || "";
-  let namaRaw = item.t || "KONTER"; 
-  let tipeRaw = item.v || "-"; 
-  let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
-
-  // 1. BUAT FORMAT: "GUSTI 7777"
-  let bersih = nomorRaw.toString().trim().replace(/[^0-9]/g, "");
-  let empatDigit = bersih.length >= 4 ? bersih.slice(-4) : bersih;
-  let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
-
-  // 2. POTONG TIPE JIKA LEBIH DARI 10 KARAKTER
-  if (tipeRaw.length > 10) {
-    tipeRaw = tipeRaw.substring(0, 10) + "-";
+  if (!allBuyersData || allBuyersData.length === 0) {
+    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
+    return;
   }
 
-  let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
-  let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const pageData = allBuyersData.slice(startIndex, endIndex);
 
-  let statusHtml = `
-    <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorRaw.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
-      <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
-      <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-    </select>
-  `;
+  container.innerHTML = "";
 
-  tr.innerHTML = `
-    <td>
-      <strong>${tampilanNomor}</strong>
-      <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
-    </td>
-    <td>${tipeRaw}</td>
-    <td>${statusHtml}</td>
-  `;
-  container.appendChild(tr);
-});
+  pageData.forEach((item, index) => {
+    let tr = document.createElement("tr");
+    let nomorRaw = item.r || "";
+    let waktuRaw = item.q || "";
+    let namaRaw = item.t || "NONAME";  // Ambil data nama dari kolom T
+    let tipeRaw = item.v || "-";       // Ambil data jenis paket dari kolom V
+    let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
+    
+    // 1. FORMAT KOLOM NOMOR BERSAMA NAMA (Contoh: GUSTI 2885)
+    let bersih = nomorRaw.toString().trim().replace(/[^0-9]/g, "");
+    let empatDigit = bersih.length >= 4 ? bersih.slice(-4) : bersih;
+    let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
 
-      // Update Navigasi
-      const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
-      const pageInfo = document.getElementById("page-info");
-      const btnPrev = document.getElementById("btn-prev");
-      const btnNext = document.getElementById("btn-next");
-
-      if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
-      if (btnPrev) btnPrev.disabled = (currentPage === 1);
-      
-      const isAtEnd = !hasMoreServerData && (currentPage >= maxLocalPages);
-      if (btnNext) btnNext.disabled = isAtEnd;
+    // 2. POTONG KOLOM TIPE JIKA LEBIH DARI 10 KARAKTER
+    if (tipeRaw.length > 10) {
+      tipeRaw = tipeRaw.substring(0, 10) + "-";
     }
+
+    let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
+    let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
+
+    let statusHtml = `
+      <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorRaw.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
+        <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
+        <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
+      </select>
+    `;
+
+    // CETAK KE TABEL: Kolom 1 = NAMA 4DIGIT, Kolom 2 = JENIS PAKET (V)
+    tr.innerHTML = `
+      <td>
+        <strong>${tampilanNomor}</strong>
+        <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
+      </td>
+      <td>${tipeRaw}</td>
+      <td>${statusHtml}</td>
+    `;
+    container.appendChild(tr);
+  });
+
+  // Update Navigasi
+  const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
+  const pageInfo = document.getElementById("page-info");
+  const btnPrev = document.getElementById("btn-prev");
+  const btnNext = document.getElementById("btn-next");
+
+  if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
+  if (btnPrev) btnPrev.disabled = (currentPage === 1);
+  
+  const isAtEnd = !hasMoreServerData && (currentPage >= maxLocalPages);
+  if (btnNext) btnNext.disabled = isAtEnd;
+}
 
     function changePage(direction) {
       if (isLoadingMore) return;
