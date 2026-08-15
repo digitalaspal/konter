@@ -572,35 +572,63 @@
       }
     }
 
-    function fetchMoreDataFromServer(offset, limit, callback) {
-      isLoadingMore = true;
-      
-      const btnNext = document.getElementById("btn-next");
-      if (btnNext) {
-        btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
-      }
+   // Ambil PIN dari memori browser jika sudah pernah login
+let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
+let adminClickCount = 0;
 
-      fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}`)
-        .then(res => res.json())
-        .then(data => {
-          isLoadingMore = false;
-          isInitialLoad = false;
-          if (btnNext) btnNext.innerText = "Berikutnya ▶";
-
-          if (data && Array.isArray(data.pembeli)) {
-            allBuyersData = allBuyersData.concat(data.pembeli);
-            hasMoreServerData = data.hasMore;
-            renderBuyersList();
-            if (callback) callback();
-          }
-        })
-        .catch(err => {
-          isLoadingMore = false;
-          isInitialLoad = false;
-          if (btnNext) btnNext.innerText = "Berikutnya ▶";
-          console.error(err);
-        });
+function aktifkanModeAdmin() {
+  adminClickCount++;
+  if (adminClickCount >= 3) {
+    let inputPin = prompt("Masukkan PIN Admin Ardaf Store:");
+    if (inputPin) {
+      savedPin = inputPin;
+      localStorage.setItem("ARDAF_ADMIN_PIN", inputPin);
+      // Refresh data pembeli dengan PIN baru
+      allBuyersData = [];
+      loadPembeli();
     }
+    adminClickCount = 0;
+  }
+}
+
+function fetchMoreDataFromServer(offset, limit, callback) {
+  isLoadingMore = true;
+  
+  const btnNext = document.getElementById("btn-next");
+  if (btnNext) {
+    btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+  }
+
+  // Kirim PIN ke server (jika ada)
+  fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
+    .then(res => res.json())
+    .then(data => {
+      isLoadingMore = false;
+      isInitialLoad = false;
+      if (btnNext) btnNext.innerText = "Berikutnya ▶";
+
+      if (data && Array.isArray(data.pembeli)) {
+        // Jika PIN salah, hapus dari memori
+        if (savedPin !== "" && !data.isAdmin) {
+          alert("❌ PIN Admin Salah!");
+          savedPin = "";
+          localStorage.removeItem("ARDAF_ADMIN_PIN");
+        }
+        
+        allBuyersData = allBuyersData.concat(data.pembeli);
+        hasMoreServerData = data.hasMore;
+        isAdmin = data.isAdmin; // Ditentukan oleh server!
+        renderBuyersList();
+        if (callback) callback();
+      }
+    })
+    .catch(err => {
+      isLoadingMore = false;
+      isInitialLoad = false;
+      if (btnNext) btnNext.innerText = "Berikutnya ▶";
+      console.error(err);
+    });
+}
 
     function renderBuyersList() {
   const container = document.getElementById("buyers-list");
