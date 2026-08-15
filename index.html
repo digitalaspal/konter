@@ -197,7 +197,7 @@
     <!-- FORM INPUT MINIMALIS PENAMBAHAN KONTER MANUAL -->
     <div class="konter-form-box" style="background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span style="font-size: 12px; font-weight: bold; color: #38bdf8;">➕ TAMBAH TRANSAKSI KONTER</span>
+        <span style="font-size: 12px; font-weight: bold; color: #38bdf8;">➕ TULIS TRANSAKSI BARU</span>
         <button type="button" id="btn-toggle-input-mode" onclick="toggleModeInputS()" style="width: auto; margin: 0; padding: 3px 8px; font-size: 11px; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
           🔢 Mode: Angka
         </button>
@@ -702,7 +702,7 @@
     let nomorWaAsli = item.r || "";
     let empatDigit = item.digit || ""; 
     let waktuRaw = item.q || "";
-    let namaRaw = item.t || "KONTER";
+    let namaRaw = item.t || "HPMM";
     let tipeRaw = item.v || "-";
     let keyUnik = (nomorWaAsli || empatDigit) + "_" + waktuRaw + "_" + (startIndex + index);
     
@@ -837,7 +837,7 @@
       const payload = {
         action: "catat_trx_konter",
         nomorPelanggan: inputS,   // Kolom S
-        nama: "KONTER",           // Default Kolom T
+        nama: "HPMM",           // Default Kolom T
         status: statusU,          // Kolom U
         jenisPaket: jenisV        // Kolom V
       };
