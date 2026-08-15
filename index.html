@@ -711,25 +711,31 @@
           </select>
         `;
 
-        // 2. RENDERING KOLOM TAGIH (Hanya Muncul Jika Admin Auth)
-        let tdTagihHtml = "";
-        if (isAdminMode) {
-          let bersihWA = nomorWaAsli.replace(/\D/g, '');
-          if (bersihWA.startsWith("0")) {
-            bersihWA = "62" + bersihWA.substring(1);
-          }
-          
-          let pesanWA = encodeURIComponent(`Halo Kaka ${namaRaw}, mengingatkan untuk tagihan pesanan ${tipeRaw} (${waktuRaw}). Terima kasih 🙏`);
-          let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
+       // 2. RENDERING KOLOM TAGIH (Hanya Muncul Jika Admin Auth DAN Status PENDING)
+let tdTagihHtml = "";
+if (isAdminMode) {
+  // ⚡ Pengecekan status: 
+  if (!isSelesai) {
+    let bersihWA = nomorWaAsli.replace(/\D/g, '');
+    if (bersihWA.startsWith("0")) {
+      bersihWA = "62" + bersihWA.substring(1);
+    }
+    
+    let pesanWA = encodeURIComponent(`Apakah pembayarannya sudah dilakukan? 🙏`);
+    let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
 
-          tdTagihHtml = `
-            <td style="text-align:center;">
-              <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
-                💬 TAGIH
-              </a>
-            </td>
-          `;
-        }
+    tdTagihHtml = `
+      <td style="text-align:center;">
+        <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
+          💬 TAGIH
+        </a>
+      </td>
+    `;
+  } else {
+    // ⚡ Jika status sudah SELESAI / LUNAS, tampilkan tanda centang / strip kosong
+    tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
+  }
+}
 
         tr.innerHTML = `
           <td>
