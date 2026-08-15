@@ -606,178 +606,189 @@
     }
 
     function fetchMoreDataFromServer(offset, limit, callback) {
-      isLoadingMore = true;
-      
-      const btnNext = document.getElementById("btn-next");
-      if (btnNext) {
-        btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
-      }
+  isLoadingMore = true;
+  
+  const btnNext = document.getElementById("btn-next");
+  if (btnNext) {
+    btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+  }
 
-      fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
-        .then(res => res.json())
-        .then(data => {
-          isLoadingMore = false;
-          isInitialLoad = false;
-          if (btnNext) btnNext.innerText = "Berikutnya ▶";
+  fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
+    .then(res => res.json())
+    .then(data => {
+      isLoadingMore = false;
+      isInitialLoad = false;
+      if (btnNext) btnNext.innerText = "Berikutnya ▶";
 
-          if (data && Array.isArray(data.pembeli)) {
-            isAdminMode = data.isAdmin || false;
+      if (data && Array.isArray(data.pembeli)) {
+        isAdminMode = data.isAdmin || false;
 
-            if (savedPin !== "" && !isAdminMode && offset === 0) {
-              alert("❌ PIN Admin Salah!");
-              savedPin = "";
-              localStorage.removeItem("ARDAF_ADMIN_PIN");
-            }
-
-            allBuyersData = allBuyersData.concat(data.pembeli);
-            hasMoreServerData = data.hasMore;
-            renderBuyersList();
-            if (callback) callback();
-          }
-        })
-        .catch(err => {
-          isLoadingMore = false;
-          isInitialLoad = false;
-          if (btnNext) btnNext.innerText = "Berikutnya ▶";
-          console.error(err);
-        });
-    }
-
-    function renderBuyersList() {
-      const container = document.getElementById("buyers-list");
-      const thead = document.getElementById("buyers-thead");
-      const lockIcon = document.getElementById("admin-lock-icon");
-      if (!container || !thead) return;
-
-      // 1. DYNAMIC HEADER & ICON LOCK STATUS
-      if (lockIcon) {
-        lockIcon.innerText = isAdminMode ? "🔓" : "🔒";
-      }
-
-      if (isAdminMode) {
-        thead.innerHTML = `
-          <tr>
-            <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk PIN Admin">NOMOR 🔓</th>
-            <th>TIPE</th>
-            <th>STATUS</th>
-            <th style="color:#10b981; text-align:center;">TAGIH</th>
-          </tr>
-        `;
-      } else {
-        thead.innerHTML = `
-          <tr>
-            <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk PIN Admin">NOMOR 🔒</th>
-            <th>TIPE</th>
-            <th>STATUS</th>
-          </tr>
-        `;
-      }
-
-      if (!allBuyersData || allBuyersData.length === 0) {
-        let colSpan = isAdminMode ? 4 : 3;
-        container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
-        return;
-      }
-
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const pageData = allBuyersData.slice(startIndex, endIndex);
-
-      container.innerHTML = "";
-
-      pageData.forEach((item, index) => {
-        let tr = document.createElement("tr");
-        let nomorWaAsli = item.r || ""; // Nomor WA dari Kolom R di Apps Script
-        let empatDigit = item.digit || ""; 
-        let waktuRaw = item.q || "";
-        let namaRaw = item.t || "KONTER";
-        let tipeRaw = item.v || "-";
-        let keyUnik = (nomorWaAsli || empatDigit) + "_" + waktuRaw + "_" + (startIndex + index);
-        
-        // FORMAT NOMOR PEMBELI (Contoh: KKSP 4694)
-        let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
-
-        if (tipeRaw.length > 10) {
-          tipeRaw = tipeRaw.substring(0, 10) + "-";
+        if (savedPin !== "" && !isAdminMode && offset === 0) {
+          alert("❌ PIN Admin Salah!");
+          savedPin = "";
+          localStorage.removeItem("ARDAF_ADMIN_PIN");
         }
 
-        let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
-        let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
-
-        let statusHtml = `
-          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
-            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
-            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-          </select>
-        `;
-
-       // 2. RENDERING KOLOM TAGIH (Hanya Muncul Jika Admin Auth DAN Status PENDING)
-let tdTagihHtml = "";
-if (isAdminMode) {
-  // ⚡ Pengecekan status: 
-  if (!isSelesai) {
-    let bersihWA = nomorWaAsli.replace(/\D/g, '');
-    if (bersihWA.startsWith("0")) {
-      bersihWA = "62" + bersihWA.substring(1);
-    }
-    
-    let pesanWA = encodeURIComponent(`Apakah pembayarannya sudah dilakukan? 🙏`);
-    let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
-
-    tdTagihHtml = `
-      <td style="text-align:center;">
-        <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
-          💬 TAGIH
-        </a>
-      </td>
-    `;
-  } else {
-    // ⚡ Jika status sudah SELESAI / LUNAS, tampilkan tanda centang / strip kosong
-    tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
-  }
+        // Hindari duplikasi data saat concat
+        if (data.pembeli.length > 0) {
+          allBuyersData = allBuyersData.concat(data.pembeli);
+        }
+        
+        hasMoreServerData = data.hasMore;
+        renderBuyersList();
+        if (callback) callback();
+      }
+    })
+    .catch(err => {
+      isLoadingMore = false;
+      isInitialLoad = false;
+      if (btnNext) btnNext.innerText = "Berikutnya ▶";
+      console.error("Error fetch data:", err);
+    });
 }
 
-        tr.innerHTML = `
-          <td>
-            <strong>${tampilanNomor}</strong>
-            <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
-          </td>
-          <td>${tipeRaw}</td>
-          <td>${statusHtml}</td>
-          ${tdTagihHtml}
-        `;
-        container.appendChild(tr);
-      });
+    function renderBuyersList() {
+  const container = document.getElementById("buyers-list");
+  const thead = document.getElementById("buyers-thead");
+  const lockIcon = document.getElementById("admin-lock-icon");
+  if (!container || !thead) return;
 
-      // Update Navigasi Paginasi
-      const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
-      const pageInfo = document.getElementById("page-info");
-      const btnPrev = document.getElementById("btn-prev");
-      const btnNext = document.getElementById("btn-next");
+  // Header status Admin
+  if (lockIcon) {
+    lockIcon.innerText = isAdminMode ? "🔓" : "🔒";
+  }
 
-      if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
-      if (btnPrev) btnPrev.disabled = (currentPage === 1);
-      
-      const isAtEnd = !hasMoreServerData && (currentPage >= maxLocalPages);
-      if (btnNext) btnNext.disabled = isAtEnd;
+  if (isAdminMode) {
+    thead.innerHTML = `
+      <tr>
+        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔓</th>
+        <th>TIPE</th>
+        <th>STATUS</th>
+        <th style="color:#10b981; text-align:center;">TAGIH</th>
+      </tr>
+    `;
+  } else {
+    thead.innerHTML = `
+      <tr>
+        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔒</th>
+        <th>TIPE</th>
+        <th>STATUS</th>
+      </tr>
+    `;
+  }
+
+  if (!allBuyersData || allBuyersData.length === 0) {
+    let colSpan = isAdminMode ? 4 : 3;
+    container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
+    return;
+  }
+
+  // --- HITUNG RENTANG DATA BERDASARKAN HALAMAN AKTIF ---
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const pageData = allBuyersData.slice(startIndex, endIndex);
+
+  // Jika halaman kedua kosong karena data belum diambil, trigger fetch data baru
+  if (pageData.length === 0 && hasMoreServerData && !isLoadingMore) {
+    fetchMoreDataFromServer(allBuyersData.length, 20);
+    return;
+  }
+
+  container.innerHTML = "";
+
+  pageData.forEach((item, index) => {
+    let tr = document.createElement("tr");
+    let nomorWaAsli = item.r || "";
+    let empatDigit = item.digit || ""; 
+    let waktuRaw = item.q || "";
+    let namaRaw = item.t || "KONTER";
+    let tipeRaw = item.v || "-";
+    let keyUnik = (nomorWaAsli || empatDigit) + "_" + waktuRaw + "_" + (startIndex + index);
+    
+    let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
+
+    if (tipeRaw.length > 10) {
+      tipeRaw = tipeRaw.substring(0, 10) + "-";
     }
 
-    function changePage(direction) {
-      if (isLoadingMore) return;
+    let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
+    let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
 
-      const nextCalculatedPage = currentPage + direction;
-      const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
+    let statusHtml = `
+      <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
+        <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
+        <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
+      </select>
+    `;
 
-      if (direction === 1 && nextCalculatedPage > maxLocalPages && hasMoreServerData) {
-        fetchMoreDataFromServer(allBuyersData.length, 20, () => {
-          currentPage = nextCalculatedPage;
-          renderBuyersList();
-        });
+    // Tombol TAGIH hanya untuk PENDING
+    let tdTagihHtml = "";
+    if (isAdminMode) {
+      if (!isSelesai) {
+        let bersihWA = nomorWaAsli.replace(/\D/g, '');
+        if (bersihWA.startsWith("0")) {
+          bersihWA = "62" + bersihWA.substring(1);
+        }
+        
+        let pesanWA = encodeURIComponent(`Halo Kaka ${namaRaw}, mengingatkan untuk tagihan pesanan ${tipeRaw} (${waktuRaw}). Terima kasih 🙏`);
+        let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
+
+        tdTagihHtml = `
+          <td style="text-align:center;">
+            <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
+              💬 TAGIH
+            </a>
+          </td>
+        `;
       } else {
-        currentPage = nextCalculatedPage;
-        renderBuyersList();
+        tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
       }
     }
+
+    tr.innerHTML = `
+      <td>
+        <strong>${tampilanNomor}</strong>
+        <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
+      </td>
+      <td>${tipeRaw}</td>
+      <td>${statusHtml}</td>
+      ${tdTagihHtml}
+    `;
+    container.appendChild(tr);
+  });
+
+  // Navigasi Paginasi
+  const totalLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
+  const pageInfo = document.getElementById("page-info");
+  const btnPrev = document.getElementById("btn-prev");
+  const btnNext = document.getElementById("btn-next");
+
+  if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
+  if (btnPrev) btnPrev.disabled = (currentPage === 1);
+  
+  const isAtEnd = !hasMoreServerData && (currentPage >= totalLocalPages);
+  if (btnNext) btnNext.disabled = isAtEnd;
+}
+
+    function changePage(direction) {
+  if (isLoadingMore) return;
+
+  const nextCalculatedPage = currentPage + direction;
+  const totalLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
+
+  // 1. Jika klik Next dan halaman berikutnya butuh data baru dari server
+  if (direction === 1 && nextCalculatedPage > totalLocalPages && hasMoreServerData) {
+    fetchMoreDataFromServer(allBuyersData.length, 20, () => {
+      currentPage = nextCalculatedPage;
+      renderBuyersList();
+    });
+  } 
+  // 2. Jika data sudah tersedia di memori lokal, langsung ganti halaman
+  else if (nextCalculatedPage >= 1 && (nextCalculatedPage <= totalLocalPages || hasMoreServerData)) {
+    currentPage = nextCalculatedPage;
+    renderBuyersList();
+  }
+}
 
     /* --- LOGIK FORM INPUT KONTER --- */
     let isModeAngkaS = true;
