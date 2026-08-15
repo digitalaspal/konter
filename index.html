@@ -234,11 +234,11 @@
     <div class="table-responsive">
       <table class="buyers-table">
         <thead>
-          <tr>
-            <th>NOMOR</th>
-            <th>TIPE</th>
-            <th>STATUS</th>
-          </tr>
+          <tr id="buyers-thead-tr">
+      <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk Login Admin">NOMOR 🔒</th>
+      <th>TIPE</th>
+      <th>STATUS</th>
+    </tr>
         </thead>
         <tbody id="buyers-list">
           <tr>
@@ -576,27 +576,26 @@
     }
 
    let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
+let isAdminMode = false;
 let adminClickTimer = null;
 let adminClickCount = 0;
 
 function aktifkanModeAdmin() {
   adminClickCount++;
   
-  // Reset hitungan jika jeda klik lebih dari 1.5 detik
   clearTimeout(adminClickTimer);
   adminClickTimer = setTimeout(() => {
     adminClickCount = 0;
   }, 1500);
-  
-  if (adminClickCount >= 2) {
+
+  if (adminClickCount >= 3) {
     adminClickCount = 0;
-    
     let inputPin = prompt("🔑 Masukkan PIN Admin Ardaf Store:");
-    if (inputPin) {
-      savedPin = inputPin;
-      localStorage.setItem("ARDAF_ADMIN_PIN", inputPin);
+    if (inputPin !== null) {
+      savedPin = inputPin.trim();
+      localStorage.setItem("ARDAF_ADMIN_PIN", savedPin);
       
-      // Reload daftar pembeli dari server untuk verifikasi PIN
+      // Reset data dan muat ulang dari server dengan PIN baru
       allBuyersData = [];
       loadPembeli();
     }
@@ -611,7 +610,7 @@ function fetchMoreDataFromServer(offset, limit, callback) {
     btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
   }
 
-  // Kirim PIN ke server (jika ada)
+  // Kirim parameter PIN ke backend
   fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
     .then(res => res.json())
     .then(data => {
@@ -620,16 +619,17 @@ function fetchMoreDataFromServer(offset, limit, callback) {
       if (btnNext) btnNext.innerText = "Berikutnya ▶";
 
       if (data && Array.isArray(data.pembeli)) {
-        // Jika PIN salah, hapus dari memori
-        if (savedPin !== "" && !data.isAdmin) {
-          alert("❌ PIN Admin Salah!");
+        isAdminMode = data.isAdmin || false;
+
+        // Jika user pernah isi PIN tapi PIN salah di server
+        if (savedPin !== "" && !isAdminMode) {
+          alert("❌ PIN Admin Salah / Kedaluwarsa!");
           savedPin = "";
           localStorage.removeItem("ARDAF_ADMIN_PIN");
         }
-        
+
         allBuyersData = allBuyersData.concat(data.pembeli);
         hasMoreServerData = data.hasMore;
-        isAdmin = data.isAdmin; // Ditentukan oleh server!
         renderBuyersList();
         if (callback) callback();
       }
@@ -642,12 +642,32 @@ function fetchMoreDataFromServer(offset, limit, callback) {
     });
 }
 
-    function renderBuyersList() {
+function renderBuyersList() {
   const container = document.getElementById("buyers-list");
+  const theadTr = document.getElementById("buyers-thead-tr");
   if (!container) return;
 
+  // 1. UPDATE HEADER TABEL
+  if (theadTr) {
+    if (isAdminMode) {
+      theadTr.innerHTML = `
+        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
+        <th>TIPE</th>
+        <th>STATUS</th>
+        <th style="color:#10b981;">TAGIH</th>
+      `;
+    } else {
+      theadTr.innerHTML = `
+        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 3x untuk Login Admin">NOMOR 🔒</th>
+        <th>TIPE</th>
+        <th>STATUS</th>
+      `;
+    }
+  }
+
   if (!allBuyersData || allBuyersData.length === 0) {
-    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
+    let colSpan = isAdminMode ? 4 : 3;
+    container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
     return;
   }
 
@@ -661,16 +681,15 @@ function fetchMoreDataFromServer(offset, limit, callback) {
     let tr = document.createElement("tr");
     let nomorRaw = item.r || "";
     let waktuRaw = item.q || "";
-    let namaRaw = item.t || "NONAME";  // Ambil data nama dari kolom T
-    let tipeRaw = item.v || "-";       // Ambil data jenis paket dari kolom V
+    let namaRaw = item.t || "KONTER";
+    let tipeRaw = item.v || "-";
     let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
     
-    // 1. FORMAT KOLOM NOMOR BERSAMA NAMA (Contoh: GUSTI 2885)
+    // FORMAT NAMA 4DIGIT (Contoh: GUSTI 2885)
     let bersih = nomorRaw.toString().trim().replace(/[^0-9]/g, "");
-    let empatDigit = bersih.length >= 4 ? bersih.slice(-4) : bersih;
+    let empatDigit = bersih.length >= 4 ? bersih.slice(-4) : "";
     let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
 
-    // 2. POTONG KOLOM TIPE JIKA LEBIH DARI 10 KARAKTER
     if (tipeRaw.length > 10) {
       tipeRaw = tipeRaw.substring(0, 10) + "-";
     }
@@ -685,7 +704,26 @@ function fetchMoreDataFromServer(offset, limit, callback) {
       </select>
     `;
 
-    // CETAK KE TABEL: Kolom 1 = NAMA 4DIGIT, Kolom 2 = JENIS PAKET (V)
+    // 2. LOGIKA RENDERING KOLOM TAGIH (HANYA DIBUAT JIKA ADMIN SAMA DENGAN TRUE)
+    let tdTagihHtml = "";
+    if (isAdminMode) {
+      let noWaFormatted = bersih;
+      if (noWaFormatted.startsWith("0")) {
+        noWaFormatted = "62" + noWaFormatted.substring(1);
+      }
+      
+      let pesanWA = encodeURIComponent(`Halo Kaka ${namaRaw}, mengingatkan untuk tagihan pesanan ${tipeRaw} (${waktuRaw}). Terima kasih 🙏`);
+      let linkWA = `https://wa.me/${noWaFormatted}?text=${pesanWA}`;
+
+      tdTagihHtml = `
+        <td>
+          <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 8px; background: #25d366; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap;">
+            💬 TAGIH
+          </a>
+        </td>
+      `;
+    }
+
     tr.innerHTML = `
       <td>
         <strong>${tampilanNomor}</strong>
@@ -693,6 +731,7 @@ function fetchMoreDataFromServer(offset, limit, callback) {
       </td>
       <td>${tipeRaw}</td>
       <td>${statusHtml}</td>
+      ${tdTagihHtml}
     `;
     container.appendChild(tr);
   });
