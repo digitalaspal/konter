@@ -100,20 +100,20 @@
     .btn-manual-toggle:hover {
       background: rgba(56, 189, 248, 0.1);
     }
-    /*ANIMASI LOADING*/
+    
     /* ANIMASI LOADING 3 TITIK */
-.loading-dots span {
-  animation: blink 1.4s infinite both;
-  font-weight: bold;
-}
-.loading-dots span:nth-child(2) { animation-delay: .2s; }
-.loading-dots span:nth-child(3) { animation-delay: .4s; }
+    .loading-dots span {
+      animation: blink 1.4s infinite both;
+      font-weight: bold;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: .2s; }
+    .loading-dots span:nth-child(3) { animation-delay: .4s; }
 
-@keyframes blink {
-  0% { opacity: 0.2; }
-  20% { opacity: 1; }
-  100% { opacity: 0.2; }
-}
+    @keyframes blink {
+      0% { opacity: 0.2; }
+      20% { opacity: 1; }
+      100% { opacity: 0.2; }
+    }
   </style>
 </head>
 <body>
@@ -191,6 +191,43 @@
       <h3>🔥Laporan Hari Ini</h3>
       <span class="live-badge"><span class="live-dot"></span> LIVE</span>
     </div>
+
+    <!-- FORM INPUT MINIMALIS PENAMBAHAN KONTER MANUAL -->
+    <div class="konter-form-box" style="background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-size: 12px; font-weight: bold; color: #38bdf8;">➕ TAMBAH TRANSAKSI KONTER</span>
+        <button type="button" id="btn-toggle-input-mode" onclick="toggleModeInputS()" style="width: auto; margin: 0; padding: 3px 8px; font-size: 11px; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+          🔢 Mode: Angka
+        </button>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        <!-- Input Kolom S -->
+        <input type="tel" inputmode="numeric" id="konter-nomor-s" placeholder="Nomor Pelanggan (Kolom S)" style="padding: 8px; font-size: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; width: 100%; box-sizing: border-box;" oninput="formatNomorKonter(this)">
+        
+        <!-- Input Kolom V (Dropdown) -->
+        <select id="konter-jenis-v" style="padding: 8px; font-size: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; width: 100%; box-sizing: border-box;">
+          <option value="PULSA">PULSA</option>
+          <option value="PAKETDATA">PAKETDATA</option>
+          <option value="LISTRIK">LISTRIK</option>
+          <option value="PDAM">PDAM</option>
+          <option value="GAME">GAME</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <!-- Input Kolom U (Status) -->
+        <select id="konter-status-u" style="padding: 8px; font-size: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; flex: 1; box-sizing: border-box;">
+          <option value="Selesai" selected>● SELESAI</option>
+          <option value="Pending">● PENDING</option>
+        </select>
+
+        <button type="button" onclick="simpanTransaksiKonter()" id="btn-simpan-konter" style="width: auto; margin: 0; padding: 8px 16px; font-size: 12px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+          ⚡ SIMPAN
+        </button>
+      </div>
+    </div>
+
     <div class="table-responsive">
       <table class="buyers-table">
         <thead>
@@ -206,20 +243,21 @@
           </tr>
         </tbody>
       </table>
+      
       <!-- KONTROL PAGINASI DI BAWAH TABEL -->
-<div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 0 5px;">
-  <button id="btn-prev" onclick="changePage(-1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;" disabled>
-    ◀ Sebelumnya
-  </button>
-  
-  <span id="page-info" style="font-size: 12px; color: #94a3b8; font-weight: bold;">
-    Halaman 1
-  </span>
+      <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 0 5px;">
+        <button id="btn-prev" onclick="changePage(-1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;" disabled>
+          ◀ Sebelumnya
+        </button>
+        
+        <span id="page-info" style="font-size: 12px; color: #94a3b8; font-weight: bold;">
+          Halaman 1
+        </span>
 
-  <button id="btn-next" onclick="changePage(1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;">
-    Berikutnya ▶
-  </button>
-</div>
+        <button id="btn-next" onclick="changePage(1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;">
+          Berikutnya ▶
+        </button>
+      </div>
     </div>
   </div>
 
@@ -462,243 +500,307 @@
 
     /* --- UTAMA & LOAD PEMBELI --- */
     window.onload = function() {
-  // Jalankan kedua fetch secara bersamaan (Paralel)
-  Promise.all([
-    fetch(`${SCRIPT_URL}?action=getPaket`),
-    fetch(`${BUYERS_URL}?action=getPembeli`)
-  ])
-  .then(responses => Promise.all(responses.map(res => res.json())))
-  .then(data => {
-    // data[0] adalah hasil getPaket
-    const dataPaket = data[0];
-    // data[1] adalah hasil getPembeli
-    const dataPembeli = data[1];
-
-    // --- RENDER PAKET ---
-    let selectPaket = document.getElementById("paket");
-    selectPaket.innerHTML = "";
-    if (dataPaket.paket && dataPaket.paket.length > 0) {
-      dataPaket.paket.forEach(item => {
-        let opt = document.createElement("option");
-        opt.value = item;
-        opt.innerText = item;
-        selectPaket.appendChild(opt);
-      });
-    } else {
-      selectPaket.innerHTML = "<option value=''>Paket tidak tersedia</option>";
-    }
-
-    // --- RENDER PEMBELI ---
-    if (dataPembeli && Array.isArray(dataPembeli.pembeli)) {
-      renderBuyersList(dataPembeli.pembeli);
-    }
-  })
-  .catch(err => {
-    console.error("Gagal memuat data awal:", err);
-  });
-
-  // Mulai interval update pembeli setelah load awal sukses
-  setInterval(loadPembeli, 10000); 
-};
-
-// VARIABEL PENGATURAN PAGINASI
-let allBuyersData = [];
-let currentPage = 1;
-const itemsPerPage = 10;
-let hasMoreServerData = true;
-let isLoadingMore = false;
-let isInitialLoad = true;
-
-// HTML TEMPLATE UNTUK ANIMASI LOADING 3 TITIK
-const loadingDotsHtml = `
-  <tr>
-    <td colspan="3" style="text-align:center; color:#94a3b8; padding: 20px;">
-      Memuat daftar pembeli<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
-    </td>
-  </tr>
-`;
-
-function loadPembeli() {
-  // 1. Tampilkan animasi 3 titik jika ini pemuatan pertama kali
-  if (allBuyersData.length === 0 && isInitialLoad) {
-    const container = document.getElementById("buyers-list");
-    if (container) container.innerHTML = loadingDotsHtml;
-    fetchMoreDataFromServer(0, 20);
-  } else {
-    // Refresh 20 data terbaru saja untuk auto-update background
-    fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20`)
-      .then(res => res.json())
+      Promise.all([
+        fetch(`${SCRIPT_URL}?action=getPaket`),
+        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20`)
+      ])
+      .then(responses => Promise.all(responses.map(res => res.json())))
       .then(data => {
-        if (data && Array.isArray(data.pembeli)) {
-          allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
+        const dataPaket = data[0];
+        const dataPembeli = data[1];
+
+        // --- RENDER PAKET ---
+        let selectPaket = document.getElementById("paket");
+        selectPaket.innerHTML = "";
+        if (dataPaket.paket && dataPaket.paket.length > 0) {
+          dataPaket.paket.forEach(item => {
+            let opt = document.createElement("option");
+            opt.value = item;
+            opt.innerText = item;
+            selectPaket.appendChild(opt);
+          });
+        } else {
+          selectPaket.innerHTML = "<option value=''>Paket tidak tersedia</option>";
+        }
+
+        // --- RENDER PEMBELI ---
+        if (dataPembeli && Array.isArray(dataPembeli.pembeli)) {
+          allBuyersData = dataPembeli.pembeli;
+          hasMoreServerData = dataPembeli.hasMore;
           renderBuyersList();
         }
       })
-      .catch(err => console.error(err));
-  }
-}
+      .catch(err => {
+        console.error("Gagal memuat data awal:", err);
+      });
 
-function fetchMoreDataFromServer(offset, limit, callback) {
-  isLoadingMore = true;
-  
-  // Efek animasi 3 titik pada tombol Next saat memuat data tambahan
-  const btnNext = document.getElementById("btn-next");
-  if (btnNext) {
-    btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
-  }
+      setInterval(loadPembeli, 10000); 
+    };
 
-  fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}`)
-    .then(res => res.json())
-    .then(data => {
-      isLoadingMore = false;
-      isInitialLoad = false;
-      if (btnNext) btnNext.innerText = "Berikutnya ▶";
+    // VARIABEL PENGATURAN PAGINASI (DIPERBARUI JADI 20 PER HALAMAN)
+    let allBuyersData = [];
+    let currentPage = 1;
+    const itemsPerPage = 20; 
+    let hasMoreServerData = true;
+    let isLoadingMore = false;
+    let isInitialLoad = true;
 
-      if (data && Array.isArray(data.pembeli)) {
-        allBuyersData = allBuyersData.concat(data.pembeli);
-        hasMoreServerData = data.hasMore;
-        renderBuyersList();
-        if (callback) callback();
+    // HTML TEMPLATE UNTUK ANIMASI LOADING 3 TITIK
+    const loadingDotsHtml = `
+      <tr>
+        <td colspan="3" style="text-align:center; color:#94a3b8; padding: 20px;">
+          Memuat daftar pembeli<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+        </td>
+      </tr>
+    `;
+
+    function loadPembeli() {
+      if (allBuyersData.length === 0 && isInitialLoad) {
+        const container = document.getElementById("buyers-list");
+        if (container) container.innerHTML = loadingDotsHtml;
+        fetchMoreDataFromServer(0, 20);
+      } else {
+        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && Array.isArray(data.pembeli)) {
+              allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
+              renderBuyersList();
+            }
+          })
+          .catch(err => console.error(err));
       }
-    })
-    .catch(err => {
-      isLoadingMore = false;
-      isInitialLoad = false;
-      if (btnNext) btnNext.innerText = "Berikutnya ▶";
-      console.error(err);
-    });
-}
+    }
 
-function renderBuyersList() {
-  const container = document.getElementById("buyers-list");
-  if (!container) return;
+    function fetchMoreDataFromServer(offset, limit, callback) {
+      isLoadingMore = true;
+      
+      const btnNext = document.getElementById("btn-next");
+      if (btnNext) {
+        btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+      }
 
-  if (!allBuyersData || allBuyersData.length === 0) {
-    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
-    return;
-  }
+      fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}`)
+        .then(res => res.json())
+        .then(data => {
+          isLoadingMore = false;
+          isInitialLoad = false;
+          if (btnNext) btnNext.innerText = "Berikutnya ▶";
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const pageData = allBuyersData.slice(startIndex, endIndex);
+          if (data && Array.isArray(data.pembeli)) {
+            allBuyersData = allBuyersData.concat(data.pembeli);
+            hasMoreServerData = data.hasMore;
+            renderBuyersList();
+            if (callback) callback();
+          }
+        })
+        .catch(err => {
+          isLoadingMore = false;
+          isInitialLoad = false;
+          if (btnNext) btnNext.innerText = "Berikutnya ▶";
+          console.error(err);
+        });
+    }
 
-  container.innerHTML = "";
+    function renderBuyersList() {
+      const container = document.getElementById("buyers-list");
+      if (!container) return;
 
-  pageData.forEach((item, index) => {
-    let tr = document.createElement("tr");
-    let nomorRaw = item.r || "";
-    let waktuRaw = item.q || "";
-    let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
-    
-    let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
-    let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
+      if (!allBuyersData || allBuyersData.length === 0) {
+        container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
+        return;
+      }
 
-    let statusHtml = `
-      <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorRaw.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
-        <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
-        <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-      </select>
-    `;
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageData = allBuyersData.slice(startIndex, endIndex);
 
-    tr.innerHTML = `
-      <td>
-        <strong>${sensorNomor(nomorRaw)}</strong>
-        <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
-      </td>
-      <td>${item.t || '-'}</td>
-      <td>${statusHtml}</td>
-    `;
-    container.appendChild(tr);
-  });
+      container.innerHTML = "";
 
-  // Update Navigasi
-  const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
-  const pageInfo = document.getElementById("page-info");
-  const btnPrev = document.getElementById("btn-prev");
-  const btnNext = document.getElementById("btn-next");
+      pageData.forEach((item, index) => {
+        let tr = document.createElement("tr");
+        let nomorRaw = item.r || "";
+        let waktuRaw = item.q || "";
+        let keyUnik = nomorRaw + "_" + waktuRaw + "_" + (startIndex + index);
+        
+        let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
+        let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
 
-  if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
-  if (btnPrev) btnPrev.disabled = (currentPage === 1);
-  
-  // Tombol Next mati jika sudah di ujung data server
-  const isAtEnd = !hasMoreServerData && (currentPage >= maxLocalPages);
-  if (btnNext) btnNext.disabled = isAtEnd;
-}
+        let statusHtml = `
+          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorRaw.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
+            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
+            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
+          </select>
+        `;
 
-function changePage(direction) {
-  if (isLoadingMore) return;
+        tr.innerHTML = `
+          <td>
+            <strong>${sensorNomor(nomorRaw)}</strong>
+            <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
+          </td>
+          <td>${item.t || '-'}</td>
+          <td>${statusHtml}</td>
+        `;
+        container.appendChild(tr);
+      });
 
-  const nextCalculatedPage = currentPage + direction;
-  const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
+      // Update Navigasi
+      const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
+      const pageInfo = document.getElementById("page-info");
+      const btnPrev = document.getElementById("btn-prev");
+      const btnNext = document.getElementById("btn-next");
 
-  // Jika klik Next dan data lokal habis, panggil batch data berikutnya
-  if (direction === 1 && nextCalculatedPage > maxLocalPages && hasMoreServerData) {
-    fetchMoreDataFromServer(allBuyersData.length, 20, () => {
-      currentPage = nextCalculatedPage;
-      renderBuyersList();
-    });
-  } else {
-    currentPage = nextCalculatedPage;
-    renderBuyersList();
-  }
-}
+      if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
+      if (btnPrev) btnPrev.disabled = (currentPage === 1);
+      
+      const isAtEnd = !hasMoreServerData && (currentPage >= maxLocalPages);
+      if (btnNext) btnNext.disabled = isAtEnd;
+    }
 
-// FUNGSI PERUBAHAN STATUS (DIKIRIM LANGSUNG KE BUYERS_URL)
-function ubahStatusAction(selectEl, keyUnik, nomorRaw, waktuRaw) {
-  let selectedVal = selectEl.value;
+    function changePage(direction) {
+      if (isLoadingMore) return;
 
-  if (selectedVal === "Selesai") {
-    let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
-    
-    if (konfirmasi) {
-      // 1. Kunci sementara & ubah tampilan UI
-      selectEl.disabled = true;
-      selectEl.classList.add("is-selesai");
+      const nextCalculatedPage = currentPage + direction;
+      const maxLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
 
-      // 2. Simpan di memori lokal menggunakan Key Unik
-      localStatusMap[keyUnik] = "Selesai";
+      if (direction === 1 && nextCalculatedPage > maxLocalPages && hasMoreServerData) {
+        fetchMoreDataFromServer(allBuyersData.length, 20, () => {
+          currentPage = nextCalculatedPage;
+          renderBuyersList();
+        });
+      } else {
+        currentPage = nextCalculatedPage;
+        renderBuyersList();
+      }
+    }
 
-      // 3. Pastikan data nomor/group aman dari spasi berlebih
-      let cleanNomor = nomorRaw ? String(nomorRaw).trim() : "";
-      let cleanWaktu = waktuRaw ? String(waktuRaw).trim() : "";
+    /* --- LOGIK FORM INPUT KONTER --- */
+    let isModeAngkaS = true;
 
-      // 4. Kirim parameter lengkap ke backend
-      const targetUrl = `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
+    function toggleModeInputS() {
+      const inputS = document.getElementById("konter-nomor-s");
+      const btnToggle = document.getElementById("btn-toggle-input-mode");
+      
+      isModeAngkaS = !isModeAngkaS;
+      
+      if (isModeAngkaS) {
+        inputS.type = "tel";
+        inputS.inputMode = "numeric";
+        btnToggle.innerText = "🔢 Mode: Angka";
+        btnToggle.style.background = "#0284c7";
+      } else {
+        inputS.type = "text";
+        inputS.removeAttribute("inputmode");
+        btnToggle.innerText = "🔤 Mode: Teks";
+        btnToggle.style.background = "#8b5cf6";
+      }
+    }
 
-      fetch(targetUrl, {
-        method: "GET",
-        redirect: "follow"
+    function formatNomorKonter(input) {
+      if (!isModeAngkaS) return;
+      formatNomorRealtime(input);
+    }
+
+    function simpanTransaksiKonter() {
+      const inputS = document.getElementById("konter-nomor-s").value.trim();
+      const jenisV = document.getElementById("konter-jenis-v").value;
+      const statusU = document.getElementById("konter-status-u").value;
+      const btnSimpan = document.getElementById("btn-simpan-konter");
+
+      if (!inputS) {
+        alert("Mohon isi Nomor Pelanggan / Data Kolom S!");
+        return;
+      }
+
+      btnSimpan.disabled = true;
+      btnSimpan.innerText = "PROSES...";
+      btnSimpan.style.opacity = "0.6";
+
+      const payload = {
+        action: "catat_trx_konter",
+        nomorWA: "087775557768", // Default Kolom R
+        nomorPelanggan: inputS,   // Kolom S
+        nama: "KONTER",           // Default Kolom T
+        status: statusU,          // Kolom U (Default Selesai)
+        jenisPaket: jenisV        // Kolom V
+      };
+
+      fetch(BUYERS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
-        console.log("Respon update status dari BUYERS_URL:", data);
-        if (data.result === "success" || data.status === "success") {
-          console.log("✅ BERHASIL MENGUBAH STATUS DI SHEET2!");
+        btnSimpan.disabled = false;
+        btnSimpan.innerText = "⚡ SIMPAN";
+        btnSimpan.style.opacity = "1";
+
+        if (data.status === "success") {
+          document.getElementById("konter-nomor-s").value = "";
+          loadPembeli();
         } else {
-          // JIKA GAGAL DI SHEET: Kembalikan status ke Pending & buka kunci
-          alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui di Sheet2.");
-          delete localStatusMap[keyUnik];
-          selectEl.disabled = false;
-          selectEl.classList.remove("is-selesai");
-          selectEl.value = "Pending";
+          alert("⚠️ Gagal menyimpan: " + (data.message || "Error server"));
         }
       })
       .catch(err => {
-        console.error("Gagal update status di BUYERS_URL:", err);
-        alert("⚠️ Gagal terhubung ke server. Silakan coba lagi.");
-        
-        // Kembalikan ke keadaan semula jika koneksi terputus
-        delete localStatusMap[keyUnik];
-        selectEl.disabled = false;
-        selectEl.classList.remove("is-selesai");
-        selectEl.value = "Pending";
+        console.error("Error simpan konter:", err);
+        alert("⚠️ Terjadi kesalahan koneksi!");
+        btnSimpan.disabled = false;
+        btnSimpan.innerText = "⚡ SIMPAN";
+        btnSimpan.style.opacity = "1";
       });
-
-    } else {
-      selectEl.value = "Pending";
     }
-  }
-}
+
+    function ubahStatusAction(selectEl, keyUnik, nomorRaw, waktuRaw) {
+      let selectedVal = selectEl.value;
+
+      if (selectedVal === "Selesai") {
+        let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
+        
+        if (konfirmasi) {
+          selectEl.disabled = true;
+          selectEl.classList.add("is-selesai");
+
+          localStatusMap[keyUnik] = "Selesai";
+
+          let cleanNomor = nomorRaw ? String(nomorRaw).trim() : "";
+          let cleanWaktu = waktuRaw ? String(waktuRaw).trim() : "";
+
+          const targetUrl = `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
+
+          fetch(targetUrl, {
+            method: "GET",
+            redirect: "follow"
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log("Respon update status dari BUYERS_URL:", data);
+            if (data.result === "success" || data.status === "success") {
+              console.log("✅ BERHASIL MENGUBAH STATUS DI SHEET2!");
+            } else {
+              alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui di Sheet2.");
+              delete localStatusMap[keyUnik];
+              selectEl.disabled = false;
+              selectEl.classList.remove("is-selesai");
+              selectEl.value = "Pending";
+            }
+          })
+          .catch(err => {
+            console.error("Gagal update status di BUYERS_URL:", err);
+            alert("⚠️ Gagal terhubung ke server. Silakan coba lagi.");
+            
+            delete localStatusMap[keyUnik];
+            selectEl.disabled = false;
+            selectEl.classList.remove("is-selesai");
+            selectEl.value = "Pending";
+          });
+
+        } else {
+          selectEl.value = "Pending";
+        }
+      }
+    }
 
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
