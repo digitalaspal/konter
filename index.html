@@ -114,6 +114,7 @@
       20% { opacity: 1; }
       100% { opacity: 0.2; }
     }
+    .panjang { max-width: 100px}
   </style>
 </head>
 <body>
@@ -662,7 +663,7 @@
   if (isAdminMode) {
     thead.innerHTML = `
       <tr>
-        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔓</th>
+        <th class="panjang" onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
         <th>TIPE</th>
         <th>STATUS</th>
         <th style="color:#10b981; text-align:center;">TAGIH</th>
