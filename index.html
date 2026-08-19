@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- PANGGULINGAN MANIFEST PWA -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- PENGATURAN TAMPILAN APLIKASI MANDIRI -->
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/digitalaspal/konter/refs/heads/main/logo2.png">
   <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/digitalaspal/konter/refs/heads/main/logo2.png">
   <meta name="mobile-web-app-capable" content="yes">
@@ -16,14 +13,13 @@
   <meta name="application-name" content="Ardaf Store">
   <title>Konter Ardaf Store</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #c2d2ff; color: #f8fafc; margin: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: #c2d2ff; color: #f8fafc; margin: 0; user-select: none; }
     .card { background: #1e293b; padding: 25px; border-radius: 15px; width: 100%; max-width: 480px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); box-sizing: border-box; }
     .header-box { background: #2e334f; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
     .header-box h2 { color: #34d399; margin: 0 0 5px 0; font-size: 18px; }
     .header-box p { color: #cbd5e1; margin: 0; font-size: 12px; line-height: 1.4; }
     label { display: block; text-align: left; font-weight: bold; font-size: 13px; margin: 12px 0 5px 0; color: #cbd5e1; }
     
-    /* INPUT GROUP DENGAN TOMBOL KAMERA */
     .input-group { display: flex; gap: 8px; }
     .btn-camera { width: auto; padding: 0 14px; background: #9dbb00; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0; white-space: nowrap; }
     .btn-camera:hover { background: #a0d506; }
@@ -37,14 +33,12 @@
     .spinner { border: 4px solid #334155; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    /* STYLE STIKER RINCIAN SUKSES */
     .receipt-box { background: #0f172a; border: 1px dashed #10b981; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; }
     .receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
     .receipt-row:last-child { margin-bottom: 0; }
     .receipt-label { color: #94a3b8; font-weight: 500; }
     .receipt-val { color: #f8fafc; font-weight: bold; word-break: break-all; text-align: right; }
 
-    /* STYLE DAFTAR PEMBELI TABEL DARKLIGHT (3/4 KOLOM) */
     .buyers-card { background: #1e293b; padding: 10px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); box-sizing: border-box; margin-top: 20px; }
     .buyers-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 12px; margin-bottom: 15px; }
     .buyers-header h3 { margin: 0; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 6px; user-select: none; }
@@ -56,15 +50,12 @@
     .buyers-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
     .buyers-table th { padding: 12px 10px; border-bottom: 2px solid #334155; color: #94a3b8; font-weight: 600; }
     .buyers-table td { padding: 12px 10px; border-bottom: 1px solid #334155; color: #f8fafc; vertical-align: middle; }
-    
     .buyer-time { display: block; font-size: 11px; color: #94a3b8; margin-top: 2px; font-weight: normal; }
 
-    /* STATUS SELECT DROPDOWN */
     .status-select { padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #f59e0b; font-weight: bold; cursor: pointer; width: auto; margin: 0; }
     .status-select.is-selesai { color: #10b981; background: #064e3b; border-color: #10b981; }
     .status-select:disabled { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: #10b981; cursor: not-allowed; opacity: 0.9; }
 
-    /* MODAL KAMERA & POPUP PILIHAN NOMOR */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 15px; box-sizing: border-box; }
     .modal-overlay:not(.hidden) { display: flex; }
     .modal-content { background: #1e293b; border-radius: 15px; padding: 20px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
@@ -73,51 +64,22 @@
     .scan-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 60px; border: 2px dashed #10b981; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4); }
     .btn-take-photo { background: #10b981; margin-top: 0; padding: 14px; font-size: 16px; }
     .btn-close-modal { background: #ef4444; margin-top: 10px; }
-    
     .phone-option-btn { background: #064e3b; color: #34d399; border: 1px solid #10b981; margin-top: 10px; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; transition: 0.2s; }
     .phone-option-btn:hover { background: #047857; }
 
-    /* STYLE UNTUK TOGGLE INPUT MANUAL */
-    .manual-toggle-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 14px;
-      margin-bottom: 6px;
-    }
-    .btn-manual-toggle {
-      background: transparent;
-      color: #38bdf8;
-      border: 1px dashed #38bdf8;
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 6px;
-      width: auto;
-      margin: 0;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .btn-manual-toggle:hover {
-      background: rgba(56, 189, 248, 0.1);
-    }
+    .manual-toggle-box { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; margin-bottom: 6px; }
+    .btn-manual-toggle { background: transparent; color: #38bdf8; border: 1px dashed #38bdf8; padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; margin: 0; cursor: pointer; font-weight: bold; }
+    .btn-manual-toggle:hover { background: rgba(56, 189, 248, 0.1); }
     
-    /* ANIMASI LOADING 3 TITIK */
-    .loading-dots span {
-      animation: blink 1.4s infinite both;
-      font-weight: bold;
-    }
+    .loading-dots span { animation: blink 1.4s infinite both; font-weight: bold; }
     .loading-dots span:nth-child(2) { animation-delay: .2s; }
     .loading-dots span:nth-child(3) { animation-delay: .4s; }
 
-    @keyframes blink {
-      0% { opacity: 0.2; }
-      20% { opacity: 1; }
-      100% { opacity: 0.2; }
-    }
+    @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
     .panjang { max-width: 120px; }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
   <!-- LAYER 1: FORM PEMBELIAN -->
   <div class="card" id="sec-form">
@@ -132,7 +94,6 @@
       <button class="btn-camera" type="button" onclick="bukaKamera()">📷 FOTO NOMOR</button>
     </div>
 
-    <!-- BAGIAN PEMILIHAN PAKET DATA -->
     <div class="manual-toggle-box">
       <label for="paket" style="margin: 0;">PILIH PAKET</label>
       <button type="button" class="btn-manual-toggle" id="btn-toggle-manual" onclick="toggleInputManual()">
@@ -140,12 +101,10 @@
       </button>
     </div>
 
-    <!-- 1. DROPDOWN PAKET (Default Muncul) -->
     <select id="paket">
       <option value="">⏳ Memuat pilihan paket...</option>
     </select>
 
-    <!-- 2. INPUT MANUAL (Default Tersembunyi) -->
     <div id="container-paket-manual" class="hidden" style="margin-top: 5px;">
       <input type="text" id="paket-manual" placeholder="Contoh: Paket 20K / Pulsa 20ribu" />
       <p style="font-size: 11px; color: #fbbf24; margin: 4px 0 0 2px; text-align: left;">
@@ -189,13 +148,10 @@
   <!-- CONTAINER DAFTAR PEMBELI HARI INI -->
   <div class="buyers-card">
     <div class="buyers-header">
-      <h3>
-        🔥Laporan Hari Ini 
-      </h3>
+      <h3>🔥Laporan Hari Ini</h3>
       <span class="live-badge"><span class="live-dot"></span> LIVE</span>
     </div>
 
-    <!-- FORM INPUT MINIMALIS PENAMBAHAN KONTER MANUAL -->
     <div class="konter-form-box" style="background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #334155;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <span style="font-size: 12px; font-weight: bold; color: #38bdf8;">➕ TULIS TRANSAKSI BARU</span>
@@ -205,22 +161,19 @@
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-        <!-- Input Kolom S -->
         <input type="tel" inputmode="numeric" id="konter-nomor-s" placeholder="Nomor/ID Pelanggan" style="padding: 8px; font-size: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; width: 100%; box-sizing: border-box;" oninput="formatNomorKonter(this)">
         
-        <!-- Input Kolom V (Dropdown) -->
         <select id="konter-jenis-v" style="padding: 8px; font-size: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; width: 100%; box-sizing: border-box;">
           <option value="PULSA">PULSA</option>
           <option value="PAKETDATA">PAKETDATA</option>
           <option value="LISTRIK">LISTRIK</option>
           <option value="PDAM">PDAM</option>
           <option value="GAME">GAME</option>
-          <option value="GAME">TOPUP</option>
+          <option value="TOPUP">TOPUP</option>
         </select>
       </div>
 
       <div style="display: flex; gap: 8px; align-items: center;">
-        <!-- Input Kolom U (Status) -->
         <select id="konter-status-u" style="padding: 8px; font-size: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; flex: 1; box-sizing: border-box;">
           <option value="Selesai" selected>● SELESAI</option>
           <option value="Pending">● PENDING</option>
@@ -248,7 +201,6 @@
         </tbody>
       </table>
       
-      <!-- KONTROL PAGINASI DI BAWAH TABEL -->
       <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 0 5px;">
         <button id="btn-prev" onclick="changePage(-1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;" disabled>
           ◀ Sebelumnya
@@ -279,7 +231,7 @@
     </div>
   </div>
 
-  <!-- MODAL 2: POP-UP SELEKSI BANYAK NOMOR -->
+  <!-- MODAL POP-UP SELEKSI NOMOR -->
   <div class="modal-overlay hidden" id="modal-pilihan">
     <div class="modal-content">
       <h3 style="margin-top:0; color:#34d399;">📱 Pilih Nomor HP Pembeli:</h3>
@@ -290,15 +242,25 @@
   </div>
 
   <script>
+    
     const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
     const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
+
+    // PROTEKSI F12 / INSPECT ELEMENT
+    document.onkeydown = function(e) {
+      if (e.keyCode == 123 || 
+         (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || 
+         (e.ctrlKey && e.keyCode == 85)) {
+        return false;
+      }
+    };
+
     let isModeManual = false;
     let videoStream = null;
     let activeOrderId = "";
     let activeNomor = "";
     let activePaket = "";
     let timerCek = null;
-    let previousBuyersJson = "";
     let localStatusMap = {}; 
 
     function bicara(teks) {
@@ -335,15 +297,6 @@
         btnToggle.style.color = "#38bdf8";
         inputManual.value = "";
       }
-    }
-
-    function sensorNomor(nomor) {
-      if (!nomor) return "-";
-      let bersih = nomor.toString().trim().replace(/[^0-9]/g, "");
-      if (bersih.length < 8) return "GROUP";
-      let depan = bersih.slice(0, 4);
-      let belakang = bersih.slice(8);
-      return depan + "xxxx" + belakang;
     }
 
     function formatNomorRealtime(input) {
@@ -513,7 +466,6 @@
         const dataPaket = data[0];
         const dataPembeli = data[1];
 
-        // --- RENDER PAKET ---
         let selectPaket = document.getElementById("paket");
         selectPaket.innerHTML = "";
         if (dataPaket.paket && dataPaket.paket.length > 0) {
@@ -527,7 +479,6 @@
           selectPaket.innerHTML = "<option value=''>Paket tidak tersedia</option>";
         }
 
-        // --- RENDER PEMBELI ---
         if (dataPembeli && Array.isArray(dataPembeli.pembeli)) {
           isAdminMode = dataPembeli.isAdmin || false;
           allBuyersData = dataPembeli.pembeli;
@@ -542,7 +493,6 @@
       setInterval(loadPembeli, 10000); 
     };
 
-    // VARIABEL PENGATURAN PAGINASI
     let allBuyersData = [];
     let currentPage = 1;
     const itemsPerPage = 20; 
@@ -550,7 +500,6 @@
     let isLoadingMore = false;
     let isInitialLoad = true;
 
-    // HTML TEMPLATE UNTUK ANIMASI LOADING 3 TITIK
     const loadingDotsHtml = `
       <tr>
         <td colspan="3" style="text-align:center; color:#94a3b8; padding: 20px;">
@@ -559,7 +508,6 @@
       </tr>
     `;
 
-    /* --- SYSTEM ADMIN & AUTH PIN --- */
     let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
     let isAdminMode = false;
     let adminClickTimer = null;
@@ -567,11 +515,8 @@
 
     function aktifkanModeAdmin() {
       adminClickCount++;
-      
       clearTimeout(adminClickTimer);
-      adminClickTimer = setTimeout(() => {
-        adminClickCount = 0;
-      }, 1500);
+      adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 1500);
 
       if (adminClickCount >= 2) {
         adminClickCount = 0;
@@ -579,7 +524,6 @@
         if (inputPin !== null) {
           savedPin = inputPin.trim();
           localStorage.setItem("ARDAF_ADMIN_PIN", savedPin);
-          
           allBuyersData = [];
           currentPage = 1;
           isInitialLoad = true;
@@ -608,191 +552,177 @@
     }
 
     function fetchMoreDataFromServer(offset, limit, callback) {
-  isLoadingMore = true;
-  
-  const btnNext = document.getElementById("btn-next");
-  if (btnNext) {
-    btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
-  }
-
-  fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
-    .then(res => res.json())
-    .then(data => {
-      isLoadingMore = false;
-      isInitialLoad = false;
-      if (btnNext) btnNext.innerText = "Berikutnya ▶";
-
-      if (data && Array.isArray(data.pembeli)) {
-        isAdminMode = data.isAdmin || false;
-
-        if (savedPin !== "" && !isAdminMode && offset === 0) {
-          alert("❌ PIN Admin Salah!");
-          savedPin = "";
-          localStorage.removeItem("ARDAF_ADMIN_PIN");
-        }
-
-        // Hindari duplikasi data saat concat
-        if (data.pembeli.length > 0) {
-          allBuyersData = allBuyersData.concat(data.pembeli);
-        }
-        
-        hasMoreServerData = data.hasMore;
-        renderBuyersList();
-        if (callback) callback();
+      isLoadingMore = true;
+      const btnNext = document.getElementById("btn-next");
+      if (btnNext) {
+        btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
       }
-    })
-    .catch(err => {
-      isLoadingMore = false;
-      isInitialLoad = false;
-      if (btnNext) btnNext.innerText = "Berikutnya ▶";
-      console.error("Error fetch data:", err);
-    });
-}
+
+      fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
+        .then(res => res.json())
+        .then(data => {
+          isLoadingMore = false;
+          isInitialLoad = false;
+          if (btnNext) btnNext.innerText = "Berikutnya ▶";
+
+          if (data && Array.isArray(data.pembeli)) {
+            isAdminMode = data.isAdmin || false;
+            if (savedPin !== "" && !isAdminMode && offset === 0) {
+              alert("❌ PIN Admin Salah!");
+              savedPin = "";
+              localStorage.removeItem("ARDAF_ADMIN_PIN");
+            }
+
+            if (data.pembeli.length > 0) {
+              allBuyersData = allBuyersData.concat(data.pembeli);
+            }
+            
+            hasMoreServerData = data.hasMore;
+            renderBuyersList();
+            if (callback) callback();
+          }
+        })
+        .catch(err => {
+          isLoadingMore = false;
+          isInitialLoad = false;
+          if (btnNext) btnNext.innerText = "Berikutnya ▶";
+          console.error("Error fetch data:", err);
+        });
+    }
 
     function renderBuyersList() {
-  const container = document.getElementById("buyers-list");
-  const thead = document.getElementById("buyers-thead");
-  const lockIcon = document.getElementById("admin-lock-icon");
-  if (!container || !thead) return;
+      const container = document.getElementById("buyers-list");
+      const thead = document.getElementById("buyers-thead");
+      const lockIcon = document.getElementById("admin-lock-icon");
+      if (!container || !thead) return;
 
-  // Header status Admin
-  if (lockIcon) {
-    lockIcon.innerText = isAdminMode ? "🔓" : "🔒";
-  }
+      if (lockIcon) {
+        lockIcon.innerText = isAdminMode ? "🔓" : "🔒";
+      }
 
-  if (isAdminMode) {
-    thead.innerHTML = `
-      <tr>
-        <th class="panjang" onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
-        <th>TIPE</th>
-        <th>STATUS</th>
-        <th style="color:#10b981; text-align:center;">TAGIH</th>
-      </tr>
-    `;
-  } else {
-    thead.innerHTML = `
-      <tr>
-        <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔒</th>
-        <th>TIPE</th>
-        <th>STATUS</th>
-      </tr>
-    `;
-  }
-
-  if (!allBuyersData || allBuyersData.length === 0) {
-    let colSpan = isAdminMode ? 4 : 3;
-    container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
-    return;
-  }
-
-  // --- HITUNG RENTANG DATA BERDASARKAN HALAMAN AKTIF ---
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const pageData = allBuyersData.slice(startIndex, endIndex);
-
-  // Jika halaman kedua kosong karena data belum diambil, trigger fetch data baru
-  if (pageData.length === 0 && hasMoreServerData && !isLoadingMore) {
-    fetchMoreDataFromServer(allBuyersData.length, 20);
-    return;
-  }
-
-  container.innerHTML = "";
-
-  pageData.forEach((item, index) => {
-    let tr = document.createElement("tr");
-    let nomorWaAsli = item.r || "";
-    let empatDigit = item.digit || ""; 
-    let waktuRaw = item.q || "";
-    let namaRaw = item.t || "HPMM";
-    let tipeRaw = item.v || "-";
-    let keyUnik = (nomorWaAsli || empatDigit) + "_" + waktuRaw + "_" + (startIndex + index);
-    
-    let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
-
-    if (tipeRaw.length > 10) {
-      tipeRaw = tipeRaw.substring(0, 10) + "-";
-    }
-
-    let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
-    let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
-
-    let statusHtml = `
-      <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
-        <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
-        <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-      </select>
-    `;
-
-    // Tombol TAGIH hanya untuk PENDING
-    let tdTagihHtml = "";
-    if (isAdminMode) {
-      if (!isSelesai) {
-        let bersihWA = nomorWaAsli.replace(/\D/g, '');
-        if (bersihWA.startsWith("0")) {
-          bersihWA = "62" + bersihWA.substring(1);
-        }
-        
-        let pesanWA = encodeURIComponent(`Maaf Bagaimana pembayarannya? 🙏`);
-        let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
-
-        tdTagihHtml = `
-          <td style="text-align:center;">
-            <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
-              💬 TAGIH
-            </a>
-          </td>
+      if (isAdminMode) {
+        thead.innerHTML = `
+          <tr>
+            <th class="panjang" onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
+            <th>TIPE</th>
+            <th>STATUS</th>
+            <th style="color:#10b981; text-align:center;">TAGIH</th>
+          </tr>
         `;
       } else {
-        tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
+        thead.innerHTML = `
+          <tr>
+            <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔒</th>
+            <th>TIPE</th>
+            <th>STATUS</th>
+          </tr>
+        `;
+      }
+
+      if (!allBuyersData || allBuyersData.length === 0) {
+        let colSpan = isAdminMode ? 4 : 3;
+        container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">Belum ada transaksi</td></tr>`;
+        return;
+      }
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageData = allBuyersData.slice(startIndex, endIndex);
+
+      if (pageData.length === 0 && hasMoreServerData && !isLoadingMore) {
+        fetchMoreDataFromServer(allBuyersData.length, 20);
+        return;
+      }
+
+      container.innerHTML = "";
+
+      pageData.forEach((item, index) => {
+        let tr = document.createElement("tr");
+        let nomorWaAsli = item.r || "";
+        let empatDigit = item.digit || ""; 
+        let waktuRaw = item.q || "";
+        let namaRaw = item.t || "HPMM";
+        let tipeRaw = item.v || "-";
+        let keyUnik = (nomorWaAsli || empatDigit) + "_" + waktuRaw + "_" + (startIndex + index);
+        
+        let tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
+
+        if (tipeRaw.length > 10) {
+          tipeRaw = tipeRaw.substring(0, 10) + "-";
+        }
+
+        let currentStatus = localStatusMap[keyUnik] || item.status || "Pending"; 
+        let isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
+
+        let statusHtml = `
+          <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
+            <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
+            <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
+          </select>
+        `;
+
+        let tdTagihHtml = "";
+        if (isAdminMode) {
+          if (!isSelesai) {
+            let bersihWA = nomorWaAsli.replace(/\D/g, '');
+            if (bersihWA.startsWith("0")) {
+              bersihWA = "62" + bersihWA.substring(1);
+            }
+            let pesanWA = encodeURIComponent(`Maaf Bagaimana pembayarannya? 🙏`);
+            let linkWA = `https://wa.me/${bersihWA}?text=${pesanWA}`;
+
+            tdTagihHtml = `
+              <td style="text-align:center;">
+                <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
+                  💬 TAGIH
+                </a>
+              </td>
+            `;
+          } else {
+            tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
+          }
+        }
+
+        tr.innerHTML = `
+          <td>
+            <strong>${tampilanNomor}</strong>
+            <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
+          </td>
+          <td>${tipeRaw}</td>
+          <td>${statusHtml}</td>
+          ${tdTagihHtml}
+        `;
+        container.appendChild(tr);
+      });
+
+      const totalLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
+      const pageInfo = document.getElementById("page-info");
+      const btnPrev = document.getElementById("btn-prev");
+      const btnNext = document.getElementById("btn-next");
+
+      if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
+      if (btnPrev) btnPrev.disabled = (currentPage === 1);
+      
+      const isAtEnd = !hasMoreServerData && (currentPage >= totalLocalPages);
+      if (btnNext) btnNext.disabled = isAtEnd;
+    }
+
+    function changePage(direction) {
+      if (isLoadingMore) return;
+      const nextCalculatedPage = currentPage + direction;
+      const totalLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
+
+      if (direction === 1 && nextCalculatedPage > totalLocalPages && hasMoreServerData) {
+        fetchMoreDataFromServer(allBuyersData.length, 20, () => {
+          currentPage = nextCalculatedPage;
+          renderBuyersList();
+        });
+      } else if (nextCalculatedPage >= 1 && (nextCalculatedPage <= totalLocalPages || hasMoreServerData)) {
+        currentPage = nextCalculatedPage;
+        renderBuyersList();
       }
     }
 
-    tr.innerHTML = `
-      <td>
-        <strong>${tampilanNomor}</strong>
-        <span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
-      </td>
-      <td>${tipeRaw}</td>
-      <td>${statusHtml}</td>
-      ${tdTagihHtml}
-    `;
-    container.appendChild(tr);
-  });
-
-  // Navigasi Paginasi
-  const totalLocalPages = Math.ceil(allBuyersData.length / itemsPerPage) || 1;
-  const pageInfo = document.getElementById("page-info");
-  const btnPrev = document.getElementById("btn-prev");
-  const btnNext = document.getElementById("btn-next");
-
-  if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
-  if (btnPrev) btnPrev.disabled = (currentPage === 1);
-  
-  const isAtEnd = !hasMoreServerData && (currentPage >= totalLocalPages);
-  if (btnNext) btnNext.disabled = isAtEnd;
-}
-
-    function changePage(direction) {
-  if (isLoadingMore) return;
-
-  const nextCalculatedPage = currentPage + direction;
-  const totalLocalPages = Math.ceil(allBuyersData.length / itemsPerPage);
-
-  // 1. Jika klik Next dan halaman berikutnya butuh data baru dari server
-  if (direction === 1 && nextCalculatedPage > totalLocalPages && hasMoreServerData) {
-    fetchMoreDataFromServer(allBuyersData.length, 20, () => {
-      currentPage = nextCalculatedPage;
-      renderBuyersList();
-    });
-  } 
-  // 2. Jika data sudah tersedia di memori lokal, langsung ganti halaman
-  else if (nextCalculatedPage >= 1 && (nextCalculatedPage <= totalLocalPages || hasMoreServerData)) {
-    currentPage = nextCalculatedPage;
-    renderBuyersList();
-  }
-}
-
-    /* --- LOGIK FORM INPUT KONTER --- */
     let isModeAngkaS = true;
 
     function toggleModeInputS() {
@@ -837,10 +767,10 @@
 
       const payload = {
         action: "catat_trx_konter",
-        nomorPelanggan: inputS,   // Kolom S
-        nama: "HPMM",           // Default Kolom T
-        status: statusU,          // Kolom U
-        jenisPaket: jenisV        // Kolom V
+        nomorPelanggan: inputS,
+        nama: "HPMM",
+        status: statusU,
+        jenisPaket: jenisV
       };
 
       fetch(BUYERS_URL, {
@@ -882,7 +812,6 @@
         if (konfirmasi) {
           selectEl.disabled = true;
           selectEl.classList.add("is-selesai");
-
           localStatusMap[keyUnik] = "Selesai";
 
           let cleanNomor = nomorRaw ? String(nomorRaw).trim() : "";
@@ -896,11 +825,10 @@
           })
           .then(res => res.json())
           .then(data => {
-            console.log("Respon update status dari BUYERS_URL:", data);
             if (data.result === "success" || data.status === "success") {
-              console.log("✅ BERHASIL MENGUBAH STATUS DI SHEET2!");
+              console.log("✅ BERHASIL MENGUBAH STATUS");
             } else {
-              alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui di Sheet2.");
+              alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui.");
               delete localStatusMap[keyUnik];
               selectEl.disabled = false;
               selectEl.classList.remove("is-selesai");
@@ -908,9 +836,8 @@
             }
           })
           .catch(err => {
-            console.error("Gagal update status di BUYERS_URL:", err);
-            alert("⚠️ Gagal terhubung ke server. Silakan coba lagi.");
-            
+            console.error(err);
+            alert("⚠️ Gagal terhubung ke server.");
             delete localStatusMap[keyUnik];
             selectEl.disabled = false;
             selectEl.classList.remove("is-selesai");
@@ -925,13 +852,7 @@
 
     function prosesBeli() {
       let nomorInput = document.getElementById("nomor").value.trim();
-      let paketInput = "";
-
-      if (isModeManual) {
-        paketInput = document.getElementById("paket-manual").value.trim();
-      } else {
-        paketInput = document.getElementById("paket").value;
-      }
+      let paketInput = isModeManual ? document.getElementById("paket-manual").value.trim() : document.getElementById("paket").value;
 
       if (!nomorInput || nomorInput.length < 10) { 
         alert("Mohon periksa kembali, nomor HP belum lengkap!"); 
