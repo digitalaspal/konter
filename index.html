@@ -459,7 +459,7 @@
     window.onload = function() {
       Promise.all([
         fetch(`${SCRIPT_URL}?action=getPaket`),
-        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
+        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&kod=${encodeURIComponent(savedPin)}`)
       ])
       .then(responses => Promise.all(responses.map(res => res.json())))
       .then(data => {
