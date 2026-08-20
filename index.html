@@ -538,7 +538,7 @@
         if (container) container.innerHTML = loadingDotsHtml;
         fetchMoreDataFromServer(0, 20);
       } else {
-        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
+        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&kod=${encodeURIComponent(savedPin)}`)
           .then(res => res.json())
           .then(data => {
             if (data && Array.isArray(data.pembeli)) {
@@ -558,7 +558,7 @@
         btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
       }
 
-      fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
+      fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&kod=${encodeURIComponent(savedPin)}`)
         .then(res => res.json())
         .then(data => {
           isLoadingMore = false;
