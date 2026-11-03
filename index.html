@@ -558,9 +558,27 @@ if (filterMode === "pending") return allBuyersData.filter(isPendingItem);
 return allBuyersData;
 }
 function updatePendingBadge() {
-const el = document.getElementById("badge-pending");
-if (el) el.innerText = allBuyersData.filter(isPendingItem).length;
+    const el = document.getElementById("badge-pending");
+    if (!el) return;
+    const n = allBuyersData.filter(isPendingItem).length;
+    el.innerText = hasMoreServerData ? n + "+" : n;
 }
+
+    const totalLocalPages = Math.max(1, Math.ceil(sourceData.length / itemsPerPage));
+    const isLastPage = !hasMoreServerData && currentPage >= totalLocalPages;
+
+    if (filterMode === "pending" && isLastPage) {
+        container.insertAdjacentHTML("beforeend", `
+<tr>
+<td colspan="${isAdminMode ? 4 : 3}" style="text-align:center; color:#10b981; font-weight:bold; font-size:12px; padding:14px; letter-spacing:2px; border-bottom:none;">
+— HABIS —
+</td>
+</tr>`);
+    }
+
+    renderPagination(sourceData);
+}
+    
 function renderPagination(sourceData) {
 const totalLocalPages = Math.ceil(sourceData.length / itemsPerPage) || 1;
 const pageInfo = document.getElementById("page-info");
@@ -599,19 +617,36 @@ function renderBuyersList() {
     // >>> SUMBER DATA: hasil filter (semua / pending saja)
     const sourceData = getFilteredData();
 
-    if (!sourceData || sourceData.length === 0) {
-        let colSpan = isAdminMode ? 4 : 3;
-        const pesan = (filterMode === "pending")
-            ? "✅ Tidak ada transaksi pending"
-            : "Belum ada transaksi";
-        container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">${pesan}</td></tr>`;
+        if (sourceData.length === 0) {
+        const colSpan = isAdminMode ? 4 : 3;
 
-        // Mode pending: tarik data lama dari server untuk mencari pending yang lebih lama
-        if (filterMode === "pending" && hasMoreServerData && !isLoadingMore && autoFetchAttempts < 5) {
+        // Mode pending: masih ada data lama di server → cari dulu, jangan bilang habis
+        if (filterMode === "pending" && hasMoreServerData && !isLoadingMore && autoFetchAttempts < 10) {
+            container.innerHTML = `
+<tr>
+<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">
+🔎 Mencari transaksi pending lain<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+</td>
+</tr>`;
             autoFetchAttempts++;
             fetchMoreDataFromServer(allBuyersData.length, 20);
+            renderPagination(sourceData);
             return;
         }
+
+        let pesan = "Belum ada transaksi";
+        let warna = "#888";
+        if (filterMode === "pending") {
+            pesan = "✅ HABIS — tidak ada transaksi pending";
+            warna = "#10b981";
+        }
+
+        container.innerHTML = `
+<tr>
+<td colspan="${colSpan}" style="text-align:center; color:${warna}; padding:20px; font-weight:bold;">
+${pesan}
+</td>
+</tr>`;
         renderPagination(sourceData);
         return;
     }
