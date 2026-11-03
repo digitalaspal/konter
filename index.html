@@ -66,10 +66,15 @@ button:hover { background: #059669; }
 .loading-dots span:nth-child(2) { animation-delay: .2s; }
 .loading-dots span:nth-child(3) { animation-delay: .4s; }
 @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
+/* --- SEL NOMOR ANTI PECAH BARIS --- */
 .buyer-nomor { display: flex; flex-direction: column; line-height: 1.35; }
 .buyer-nomor strong { white-space: nowrap; font-size: 13px; }
 .buyer-time { display: block; font-size: 11px; color: #94a3b8; margin-top: 2px; font-weight: normal; white-space: nowrap; }
 .buyers-table th, .buyers-table td { white-space: nowrap; }
+@media (max-width: 480px) {
+.buyers-table th, .buyers-table td { padding: 10px 8px; }
+.buyer-nomor strong { font-size: 12.5px; }
+}
 /* --- FILTER PENDING --- */
 .filter-group { display: flex; gap: 4px; background: #0f172a; padding: 3px; border-radius: 8px; border: 1px solid #334155; }
 .btn-filter { width: auto; margin: 0; padding: 5px 10px; font-size: 11px; font-weight: bold; border: none; border-radius: 6px; background: transparent; color: #94a3b8; cursor: pointer; transition: 0.2s; }
@@ -226,190 +231,34 @@ Berikutnya ▶
 </div>
 </div>
 <script>
-const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/"; 
-const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/"; 
-// PROTEKSI F12 / INSPECT ELEMENT
+/* ============================================================
+   KONFIGURASI
+   ============================================================ */
+const SCRIPT_URL = "https://still-bush-c87d.digitalaspal.workers.dev/";
+const BUYERS_URL = "https://orderan.digitalaspal.workers.dev/";
+
 document.onkeydown = function(e) {
-if (e.keyCode == 123 || 
-(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || 
-(e.ctrlKey && e.keyCode == 85)) {
-return false;
-}
+    if (e.keyCode == 123 ||
+        (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) ||
+        (e.ctrlKey && e.keyCode == 85)) {
+        return false;
+    }
 };
+
+/* ============================================================
+   STATE / VARIABEL GLOBAL
+   ============================================================ */
 let isModeManual = false;
 let videoStream = null;
 let activeOrderId = "";
 let activeNomor = "";
 let activePaket = "";
 let timerCek = null;
-let localStatusMap = {}; 
-function bicara(teks) {
-if ('speechSynthesis' in window) {
-window.speechSynthesis.cancel();
-let ucapan = new SpeechSynthesisUtterance(teks);
-ucapan.lang = 'id-ID';
-ucapan.rate = 0.9;
-ucapan.pitch = 1.0;
-window.speechSynthesis.speak(ucapan);
-}
-}
-function toggleInputManual() {
-const selectPaket = document.getElementById("paket");
-const containerManual = document.getElementById("container-paket-manual");
-const inputManual = document.getElementById("paket-manual");
-const btnToggle = document.getElementById("btn-toggle-manual");
-isModeManual = !isModeManual;
-if (isModeManual) {
-selectPaket.classList.add("hidden");
-containerManual.classList.remove("hidden");
-btnToggle.innerText = "📋 Pilih dari Daftar";
-btnToggle.style.borderColor = "#10b981";
-btnToggle.style.color = "#34d399";
-inputManual.focus();
-} else {
-selectPaket.classList.remove("hidden");
-containerManual.classList.add("hidden");
-btnToggle.innerText = "✏️ Paket Lain / Manual";
-btnToggle.style.borderColor = "#38bdf8";
-btnToggle.style.color = "#38bdf8";
-inputManual.value = "";
-}
-}
-function formatNomorRealtime(input) {
-let val = input.value;
-let bersih = val.replace(/[^0-9]/g, "");
-if (bersih.startsWith("62")) {
-bersih = "0" + bersih.substring(2);
-} else if (bersih.startsWith("8")) {
-bersih = "0" + bersih;
-}
-input.value = bersih;
-}
-/* --- KAMERA SCAN & OCR --- */
-function bukaKamera() {
-const modal = document.getElementById("modal-kamera");
-const video = document.getElementById("webcam");
-if (!modal || !video) return;
-modal.classList.remove("hidden");
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-.then(stream => {
-videoStream = stream;
-video.srcObject = stream;
-})
-.catch(err => {
-console.error("Gagal akses kamera:", err);
-alert("Gagal membuka kamera.");
-tutupKamera();
-});
-}
-function tutupKamera() {
-if (videoStream) {
-videoStream.getTracks().forEach(track => track.stop());
-videoStream = null;
-}
-const modal = document.getElementById("modal-kamera");
-if (modal) modal.classList.add("hidden");
-const btnSnap = document.getElementById("btn-snap");
-if (btnSnap) {
-btnSnap.innerText = "FOTO NOMORNYA";
-btnSnap.disabled = false;
-}
-}
-function ambilDanProsesFoto() {
-const video = document.getElementById("webcam");
-const canvas = document.getElementById("canvas-capture");
-const btnSnap = document.getElementById("btn-snap");
-btnSnap.innerText = "🤖 AI Membaca Kotak...";
-btnSnap.disabled = true;
-const guide = document.querySelector(".scan-guide");
-const videoRect = video.getBoundingClientRect();
-const guideRect = guide.getBoundingClientRect();
-const scaleX = video.videoWidth / videoRect.width;
-const scaleY = video.videoHeight / videoRect.height;
-const cropX = (guideRect.left - videoRect.left) * scaleX;
-const cropY = (guideRect.top - videoRect.top) * scaleY;
-const cropWidth = guideRect.width * scaleX;
-const cropHeight = guideRect.height * scaleY;
-canvas.width = cropWidth;
-canvas.height = cropHeight;
-const ctx = canvas.getContext("2d");
-ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-if (videoStream) {
-videoStream.getTracks().forEach(track => track.stop());
-videoStream = null;
-}
-const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
-fetch(`${SCRIPT_URL}?action=ocr`, {
-method: "POST",
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ image: base64Image })
-})
-.then(res => res.json())
-.then(data => {
-document.getElementById("modal-kamera").classList.add("hidden");
-btnSnap.innerText = "FOTO NOMORNYA";
-btnSnap.disabled = false;
-let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-if (textResult.includes("KOSONG") || !textResult) {
-bicara("Nomor tidak terdeteksi");
-alert("Nomor tidak ditemukan di dalam kotak bingkai.");
-} else {
-ekstrakDanFilterNomor(textResult);
-}
-})
-.catch(err => {
-console.error(err);
-document.getElementById("modal-kamera").classList.add("hidden");
-btnSnap.innerText = "FOTO NOMORNYA";
-btnSnap.disabled = false;
-bicara("Gagal membaca foto");
-});
-}
-function ekstrakDanFilterNomor(teksMentah) {
-let cleanedText = teksMentah.replace(/[^0-9\s]/g, " ");
-let matches = cleanedText.match(/(08\d{8,11}|628\d{7,10})/g) || [];
-let uniqueNumbers = [...new Set(matches.map(n => {
-if (n.startsWith("62")) return "0" + n.substring(2);
-return n;
-}))];
-if (uniqueNumbers.length === 0) {
-alert("Nomor HP tidak terdeteksi dari foto.");
-} else if (uniqueNumbers.length === 1) {
-pilihNomor(uniqueNumbers[0]);
-} else {
-tampilkanModalPilihan(uniqueNumbers);
-}
-}
-function tampilkanModalPilihan(listNomor) {
-const container = document.getElementById("container-pilihan-nomor");
-container.innerHTML = "";
-listNomor.forEach(no => {
-let btn = document.createElement("button");
-btn.className = "phone-option-btn";
-let formattedStr = no.replace(/(\d{4})(\d{4})(\d+)/, "$1-$2-$3");
-btn.innerText = "🟢 " + formattedStr;
-btn.onclick = function() {
-pilihNomor(no);
-tutupModalPilihan();
-};
-container.appendChild(btn);
-});
-document.getElementById("modal-pilihan").classList.remove("hidden");
-}
-function pilihNomor(nomor) {
-const inputEl = document.getElementById("nomor");
-inputEl.value = nomor;
-formatNomorRealtime(inputEl);
-let ejaanNomor = nomor.split("").join(" ");
-bicara(`Nomor terdeteksi: ${ejaanNomor}`);
-}
-function tutupModalPilihan() {
-document.getElementById("modal-pilihan").classList.add("hidden");
-}
-/* --- UTAMA & LOAD PEMBELI --- */
+let localStatusMap = {};
+
 let allBuyersData = [];
 let currentPage = 1;
-const itemsPerPage = 20; 
+const itemsPerPage = 20;
 let hasMoreServerData = true;
 let isLoadingMore = false;
 let isInitialLoad = true;
@@ -417,43 +266,241 @@ let savedPin = localStorage.getItem("ARDAF_ADMIN_PIN") || "";
 let isAdminMode = false;
 let adminClickTimer = null;
 let adminClickCount = 0;
-/* --- STATE FILTER PENDING --- */
-let filterMode = "semua";      // "semua" | "pending"
-let autoFetchAttempts = 0;     // pembatas auto-load saat mencari data pending
+
+/* state filter pending */
+let filterMode = "semua";          // "semua" | "pending"
+let pendingScanRounds = 0;         // berapa kali cari tapi tidak dapat pending baru
+const MAX_PENDING_SCAN = 3;        // setelah 3 kali, tombol Berikutnya dimatikan
+
+/* ============================================================
+   SUARA
+   ============================================================ */
+function bicara(teks) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        let ucapan = new SpeechSynthesisUtterance(teks);
+        ucapan.lang = 'id-ID';
+        ucapan.rate = 0.9;
+        ucapan.pitch = 1.0;
+        window.speechSynthesis.speak(ucapan);
+    }
+}
+
+/* ============================================================
+   FORM PEMBELIAN
+   ============================================================ */
+function toggleInputManual() {
+    const selectPaket = document.getElementById("paket");
+    const containerManual = document.getElementById("container-paket-manual");
+    const inputManual = document.getElementById("paket-manual");
+    const btnToggle = document.getElementById("btn-toggle-manual");
+    isModeManual = !isModeManual;
+    if (isModeManual) {
+        selectPaket.classList.add("hidden");
+        containerManual.classList.remove("hidden");
+        btnToggle.innerText = "📋 Pilih dari Daftar";
+        btnToggle.style.borderColor = "#10b981";
+        btnToggle.style.color = "#34d399";
+        inputManual.focus();
+    } else {
+        selectPaket.classList.remove("hidden");
+        containerManual.classList.add("hidden");
+        btnToggle.innerText = "✏️ Paket Lain / Manual";
+        btnToggle.style.borderColor = "#38bdf8";
+        btnToggle.style.color = "#38bdf8";
+        inputManual.value = "";
+    }
+}
+
+function formatNomorRealtime(input) {
+    let val = input.value;
+    let bersih = val.replace(/[^0-9]/g, "");
+    if (bersih.startsWith("62")) {
+        bersih = "0" + bersih.substring(2);
+    } else if (bersih.startsWith("8")) {
+        bersih = "0" + bersih;
+    }
+    input.value = bersih;
+}
+
+/* ============================================================
+   KAMERA SCAN & OCR
+   ============================================================ */
+function bukaKamera() {
+    const modal = document.getElementById("modal-kamera");
+    const video = document.getElementById("webcam");
+    if (!modal || !video) return;
+    modal.classList.remove("hidden");
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+            videoStream = stream;
+            video.srcObject = stream;
+        })
+        .catch(err => {
+            console.error("Gagal akses kamera:", err);
+            alert("Gagal membuka kamera.");
+            tutupKamera();
+        });
+}
+
+function tutupKamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    const modal = document.getElementById("modal-kamera");
+    if (modal) modal.classList.add("hidden");
+    const btnSnap = document.getElementById("btn-snap");
+    if (btnSnap) {
+        btnSnap.innerText = "FOTO NOMORNYA";
+        btnSnap.disabled = false;
+    }
+}
+
+function ambilDanProsesFoto() {
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("canvas-capture");
+    const btnSnap = document.getElementById("btn-snap");
+    btnSnap.innerText = "🤖 AI Membaca Kotak...";
+    btnSnap.disabled = true;
+
+    const guide = document.querySelector(".scan-guide");
+    const videoRect = video.getBoundingClientRect();
+    const guideRect = guide.getBoundingClientRect();
+    const scaleX = video.videoWidth / videoRect.width;
+    const scaleY = video.videoHeight / videoRect.height;
+    const cropX = (guideRect.left - videoRect.left) * scaleX;
+    const cropY = (guideRect.top - videoRect.top) * scaleY;
+    const cropWidth = guideRect.width * scaleX;
+    const cropHeight = guideRect.height * scaleY;
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+
+    const base64Image = canvas.toDataURL("image/jpeg").split(",")[1];
+
+    fetch(`${SCRIPT_URL}?action=ocr`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64Image })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("modal-kamera").classList.add("hidden");
+        btnSnap.innerText = "FOTO NOMORNYA";
+        btnSnap.disabled = false;
+        let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (textResult.includes("KOSONG") || !textResult) {
+            bicara("Nomor tidak terdeteksi");
+            alert("Nomor tidak ditemukan di dalam kotak bingkai.");
+        } else {
+            ekstrakDanFilterNomor(textResult);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById("modal-kamera").classList.add("hidden");
+        btnSnap.innerText = "FOTO NOMORNYA";
+        btnSnap.disabled = false;
+        bicara("Gagal membaca foto");
+    });
+}
+
+function ekstrakDanFilterNomor(teksMentah) {
+    let cleanedText = teksMentah.replace(/[^0-9\s]/g, " ");
+    let matches = cleanedText.match(/(08\d{8,11}|628\d{7,10})/g) || [];
+    let uniqueNumbers = [...new Set(matches.map(n => {
+        if (n.startsWith("62")) return "0" + n.substring(2);
+        return n;
+    }))];
+    if (uniqueNumbers.length === 0) {
+        alert("Nomor HP tidak terdeteksi dari foto.");
+    } else if (uniqueNumbers.length === 1) {
+        pilihNomor(uniqueNumbers[0]);
+    } else {
+        tampilkanModalPilihan(uniqueNumbers);
+    }
+}
+
+function tampilkanModalPilihan(listNomor) {
+    const container = document.getElementById("container-pilihan-nomor");
+    container.innerHTML = "";
+    listNomor.forEach(no => {
+        let btn = document.createElement("button");
+        btn.className = "phone-option-btn";
+        let formattedStr = no.replace(/(\d{4})(\d{4})(\d+)/, "$1-$2-$3");
+        btn.innerText = "🟢 " + formattedStr;
+        btn.onclick = function() {
+            pilihNomor(no);
+            tutupModalPilihan();
+        };
+        container.appendChild(btn);
+    });
+    document.getElementById("modal-pilihan").classList.remove("hidden");
+}
+
+function pilihNomor(nomor) {
+    const inputEl = document.getElementById("nomor");
+    inputEl.value = nomor;
+    formatNomorRealtime(inputEl);
+    let ejaanNomor = nomor.split("").join(" ");
+    bicara(`Nomor terdeteksi: ${ejaanNomor}`);
+}
+
+function tutupModalPilihan() {
+    document.getElementById("modal-pilihan").classList.add("hidden");
+}
+
+/* ============================================================
+   LOAD DATA PEMBELI
+   ============================================================ */
 window.onload = function() {
-Promise.all([
-fetch(`${SCRIPT_URL}?action=getPaket`),
-fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
-])
-.then(responses => Promise.all(responses.map(res => res.json())))
-.then(data => {
-const dataPaket = data[0];
-const dataPembeli = data[1];
-let selectPaket = document.getElementById("paket");
-selectPaket.innerHTML = "";
-if (dataPaket.paket && dataPaket.paket.length > 0) {
-dataPaket.paket.forEach(item => {
-let opt = document.createElement("option");
-opt.value = item;
-opt.innerText = item;
-selectPaket.appendChild(opt);
-});
-} else {
-selectPaket.innerHTML = "<option value=''>Paket tidak tersedia</option>";
-}
-if (dataPembeli && Array.isArray(dataPembeli.pembeli)) {
-isAdminMode = dataPembeli.isAdmin || false;
-allBuyersData = dataPembeli.pembeli;
-hasMoreServerData = dataPembeli.hasMore;
-isInitialLoad = false;
-renderBuyersList();
-}
-})
-.catch(err => {
-console.error("Gagal memuat data awal:", err);
-});
-setInterval(loadPembeli, 10000); 
+    Promise.all([
+        fetch(`${SCRIPT_URL}?action=getPaket`),
+        fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
+    ])
+    .then(responses => Promise.all(responses.map(res => res.json())))
+    .then(data => {
+        const dataPaket = data[0];
+        const dataPembeli = data[1];
+
+        let selectPaket = document.getElementById("paket");
+        selectPaket.innerHTML = "";
+        if (dataPaket.paket && dataPaket.paket.length > 0) {
+            dataPaket.paket.forEach(item => {
+                let opt = document.createElement("option");
+                opt.value = item;
+                opt.innerText = item;
+                selectPaket.appendChild(opt);
+            });
+        } else {
+            selectPaket.innerHTML = "<option value=''>Paket tidak tersedia</option>";
+        }
+
+        if (dataPembeli && Array.isArray(dataPembeli.pembeli)) {
+            isAdminMode = dataPembeli.isAdmin || false;
+            allBuyersData = dataPembeli.pembeli;
+            hasMoreServerData = dataPembeli.hasMore;
+            isInitialLoad = false;
+            pendingScanRounds = 0;
+            renderBuyersList();
+        }
+    })
+    .catch(err => {
+        console.error("Gagal memuat data awal:", err);
+        tampilkanGagalKoneksi();
+    });
+
+    setInterval(loadPembeli, 10000);
 };
+
 const loadingDotsHtml = `
 <tr>
 <td colspan="3" style="text-align:center; color:#94a3b8; padding: 20px;">
@@ -461,42 +508,66 @@ Memuat daftar pembeli<span class="loading-dots"><span>.</span><span>.</span><spa
 </td>
 </tr>
 `;
+
+function tampilkanGagalKoneksi() {
+    const container = document.getElementById("buyers-list");
+    const selectPaket = document.getElementById("paket");
+    if (selectPaket) selectPaket.innerHTML = "<option value=''>❌ Gagal memuat paket</option>";
+    if (container) {
+        container.innerHTML = `
+<tr>
+<td colspan="3" style="text-align:center; color:#f87171; padding: 20px; line-height:1.6;">
+⚠️ <strong>Gagal terhubung ke server.</strong><br>
+<span style="font-size:12px; color:#94a3b8;">Periksa koneksi, matikan ad blocker / antivirus web shield, lalu muat ulang halaman.</span>
+</td>
+</tr>`;
+    }
+}
+
 function aktifkanModeAdmin() {
-adminClickCount++;
-clearTimeout(adminClickTimer);
-adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 1500);
-if (adminClickCount >= 2) {
-adminClickCount = 0;
-let inputPin = prompt("🔑 Masukkan PIN Admin");
-if (inputPin !== null) {
-savedPin = inputPin.trim();
-localStorage.setItem("ARDAF_ADMIN_PIN", savedPin);
-allBuyersData = [];
-currentPage = 1;
-isInitialLoad = true;
-loadPembeli();
+    adminClickCount++;
+    clearTimeout(adminClickTimer);
+    adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 1500);
+    if (adminClickCount >= 2) {
+        adminClickCount = 0;
+        let inputPin = prompt("🔑 Masukkan PIN Admin");
+        if (inputPin !== null) {
+            savedPin = inputPin.trim();
+            localStorage.setItem("ARDAF_ADMIN_PIN", savedPin);
+            allBuyersData = [];
+            currentPage = 1;
+            isInitialLoad = true;
+            pendingScanRounds = 0;
+            loadPembeli();
+        }
+    }
 }
-}
-}
+
 function loadPembeli() {
-if (allBuyersData.length === 0 && isInitialLoad) {
-const container = document.getElementById("buyers-list");
-if (container) container.innerHTML = loadingDotsHtml;
-fetchMoreDataFromServer(0, 20);
-} else {
-fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
-.then(res => res.json())
-.then(data => {
-if (data && Array.isArray(data.pembeli)) {
-isAdminMode = data.isAdmin || false;
-hasMoreServerData = data.hasMore;
-allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
-renderBuyersList();
+    if (allBuyersData.length === 0 && isInitialLoad) {
+        const container = document.getElementById("buyers-list");
+        if (container) container.innerHTML = loadingDotsHtml;
+        fetchMoreDataFromServer(0, 20);
+        return;
+    }
+
+    fetch(`${BUYERS_URL}?action=getPembeli&start=0&limit=20&pin=${encodeURIComponent(savedPin)}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data && Array.isArray(data.pembeli)) {
+            isAdminMode = data.isAdmin || false;
+            hasMoreServerData = data.hasMore;
+            allBuyersData.splice(0, data.pembeli.length, ...data.pembeli);
+            renderBuyersList();
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        if (allBuyersData.length === 0) tampilkanGagalKoneksi();
+    });
 }
-})
-.catch(err => console.error(err));
-}
-}
+
+/* Baris di bawah: TIDAK ada renderBuyersList() ganda, tidak ada autoFetchAttempts */
 function fetchMoreDataFromServer(offset, limit, callback) {
     isLoadingMore = true;
     const btnNext = document.getElementById("btn-next");
@@ -511,79 +582,114 @@ function fetchMoreDataFromServer(offset, limit, callback) {
         isInitialLoad = false;
         if (btnNext) btnNext.innerText = "Berikutnya ▶";
 
-        if (data && Array.isArray(data.pembeli)) {
-            isAdminMode = data.isAdmin || false;
+        if (!data || !Array.isArray(data.pembeli)) {
+            hasMoreServerData = false;
+            if (callback) { callback(); } else { renderBuyersList(); }
+            return;
+        }
 
-            if (savedPin !== "" && !isAdminMode && offset === 0) {
-                alert("❌ PIN Admin Salah!");
-                savedPin = "";
-                localStorage.removeItem("ARDAF_ADMIN_PIN");
-            }
+        isAdminMode = data.isAdmin || false;
 
-            if (data.pembeli.length > 0) {
-                allBuyersData = allBuyersData.concat(data.pembeli);
-            }
+        if (savedPin !== "" && !isAdminMode && offset === 0) {
+            alert("❌ PIN Admin Salah!");
+            savedPin = "";
+            localStorage.removeItem("ARDAF_ADMIN_PIN");
+        }
 
-            hasMoreServerData = data.hasMore;
-            autoFetchAttempts = 0;   // jatah auto-fetch pulih setiap ada data baru
+        const pendingSebelum = allBuyersData.filter(isPendingItem).length;
 
-            // >>> DI SINI TEMPATNYA <<<
-            if (callback) {
-                callback();
+        if (data.pembeli.length > 0) {
+            allBuyersData = allBuyersData.concat(data.pembeli);
+        }
+        hasMoreServerData = data.hasMore;
+
+        const pendingSesudah = allBuyersData.filter(isPendingItem).length;
+        if (filterMode === "pending") {
+            if (pendingSesudah > pendingSebelum) {
+                pendingScanRounds = 0;
             } else {
-                renderBuyersList();
+                pendingScanRounds++;
             }
         }
+
+        if (callback) { callback(); } else { renderBuyersList(); }
     })
     .catch(err => {
         isLoadingMore = false;
         isInitialLoad = false;
+        hasMoreServerData = false;
+        pendingScanRounds = MAX_PENDING_SCAN;
         if (btnNext) btnNext.innerText = "Berikutnya ▶";
         console.error("Error fetch data:", err);
+        renderBuyersList();
     });
 }
-/* --- HELPER FILTER PENDING --- */
+    /* ============================================================
+   FILTER PENDING
+   ============================================================ */
 function setFilterMode(mode) {
-filterMode = mode;
-currentPage = 1;
-autoFetchAttempts = 0;
-const btnSemua = document.getElementById("btn-filter-semua");
-const btnPending = document.getElementById("btn-filter-pending");
-if (btnSemua) btnSemua.classList.toggle("active", mode === "semua");
-if (btnPending) btnPending.classList.toggle("active", mode === "pending");
-renderBuyersList();
+    filterMode = mode;
+    currentPage = 1;
+    pendingScanRounds = 0;
+    const btnSemua = document.getElementById("btn-filter-semua");
+    const btnPending = document.getElementById("btn-filter-pending");
+    if (btnSemua) btnSemua.classList.toggle("active", mode === "semua");
+    if (btnPending) btnPending.classList.toggle("active", mode === "pending");
+    renderBuyersList();
 }
-// Status efektif: gabungan status dari server + perubahan lokal
+
 function getStatusOfItem(item) {
     const stableKey = (item.r || item.digit || "") + "_" + (item.q || "");
     let status = localStatusMap[stableKey];
     if (status === undefined) status = item.status || "Pending";
     return String(status).toUpperCase();
 }
+
 function isPendingItem(item) {
-const s = getStatusOfItem(item);
-return s !== "SELESAI" && s !== "LUNAS";
+    const s = getStatusOfItem(item);
+    return s !== "SELESAI" && s !== "LUNAS";
 }
+
 function getFilteredData() {
-if (filterMode === "pending") return allBuyersData.filter(isPendingItem);
-return allBuyersData;
+    if (filterMode === "pending") return allBuyersData.filter(isPendingItem);
+    return allBuyersData;
 }
+
 function updatePendingBadge() {
     const el = document.getElementById("badge-pending");
     if (!el) return;
     const n = allBuyersData.filter(isPendingItem).length;
     el.innerText = hasMoreServerData ? n + "+" : n;
 }
-    
-function renderPagination(sourceData) {
-const totalLocalPages = Math.ceil(sourceData.length / itemsPerPage) || 1;
-const pageInfo = document.getElementById("page-info");
-const btnPrev = document.getElementById("btn-prev");
-const btnNext = document.getElementById("btn-next");
-if (pageInfo) pageInfo.innerText = `Hal ${currentPage}`;
-if (btnPrev) btnPrev.disabled = (currentPage === 1);
-if (btnNext) btnNext.disabled = (!hasMoreServerData && currentPage >= totalLocalPages);
+
+/* Penentu tombol Berikutnya aktif atau tidak */
+function canGoNext() {
+    if (isLoadingMore) return false;
+
+    const filtered = getFilteredData();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+
+    if (currentPage < totalPages) return true;
+    if (!hasMoreServerData) return false;
+    if (filterMode === "semua") return true;
+
+    return pendingScanRounds < MAX_PENDING_SCAN;
 }
+
+function renderPagination(sourceData) {
+    const totalLocalPages = Math.max(1, Math.ceil(sourceData.length / itemsPerPage));
+    const pageInfo = document.getElementById("page-info");
+    const btnPrev = document.getElementById("btn-prev");
+    const btnNext = document.getElementById("btn-next");
+
+    if (pageInfo) pageInfo.innerText = `Hal ${currentPage}/${totalLocalPages}`;
+    if (btnPrev) btnPrev.disabled = (currentPage <= 1);
+    if (btnNext) btnNext.disabled = !canGoNext();
+}
+
+/* ============================================================
+   RENDER TABEL
+   ============================================================ */
 function renderBuyersList() {
     const container = document.getElementById("buyers-list");
     const thead = document.getElementById("buyers-thead");
@@ -594,48 +700,66 @@ function renderBuyersList() {
     if (isAdminMode) {
         thead.innerHTML = `
 <tr>
-<th class="panjang" onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
+<th onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
 <th>TIPE</th>
 <th>STATUS</th>
 <th style="color:#10b981; text-align:center;">TAGIH</th>
-</tr>
-`;
+</tr>`;
     } else {
         thead.innerHTML = `
 <tr>
 <th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔒</th>
 <th>TIPE</th>
 <th>STATUS</th>
-</tr>
-`;
+</tr>`;
     }
 
     const sourceData = getFilteredData();
     const totalLocalPages = Math.max(1, Math.ceil(sourceData.length / itemsPerPage));
 
-    // Klamp halaman TANPA memanggil renderBuyersList() lagi
     if (currentPage > totalLocalPages) currentPage = totalLocalPages;
     if (currentPage < 1) currentPage = 1;
 
+    /* --- tidak ada data --- */
     if (sourceData.length === 0) {
         const colSpan = isAdminMode ? 4 : 3;
-        const pesan = (filterMode === "pending")
-            ? "✅ Tidak ada transaksi pending"
-            : "Belum ada transaksi";
-        container.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; color:#888;">${pesan}</td></tr>`;
+        const bolehCariLagi = filterMode === "pending"
+            && hasMoreServerData
+            && !isLoadingMore
+            && pendingScanRounds < MAX_PENDING_SCAN;
 
-        if (filterMode === "pending" && hasMoreServerData && !isLoadingMore && autoFetchAttempts < 5) {
-            autoFetchAttempts++;
+        if (bolehCariLagi) {
+            container.innerHTML = `
+<tr>
+<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">
+🔎 Mencari transaksi pending lain<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+</td>
+</tr>`;
             fetchMoreDataFromServer(allBuyersData.length, 20);
+            renderPagination(sourceData);
+            return;
         }
+
+        const pesan = (filterMode === "pending")
+            ? "✅ HABIS — tidak ada transaksi pending"
+            : "Belum ada transaksi";
+
+        container.innerHTML = `
+<tr>
+<td colspan="${colSpan}" style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">
+${pesan}
+</td>
+</tr>`;
         renderPagination(sourceData);
         return;
     }
 
+    /* --- ada data: gambar baris --- */
     const startIndex = (currentPage - 1) * itemsPerPage;
     const pageData = sourceData.slice(startIndex, startIndex + itemsPerPage);
 
     container.innerHTML = "";
+
     pageData.forEach((item, index) => {
         const tr = document.createElement("tr");
         const nomorWaAsli = item.r || "";
@@ -643,9 +767,7 @@ function renderBuyersList() {
         const waktuRaw = item.q || "";
         const namaRaw = item.t || "HPMM";
 
-        // Kunci stabil: tidak memuat nomor halaman, jadi status tidak "balik" saat pindah page
         const stableKey = (nomorWaAsli || empatDigit) + "_" + waktuRaw;
-        // Format id lama tetap dikirim ke server
         const keyUnik = stableKey + "_" + (startIndex + index);
 
         let tipeRaw = String(item.v || "-");
@@ -661,22 +783,20 @@ function renderBuyersList() {
 <select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${stableKey}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
 <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
 <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-</select>
-`;
+</select>`;
 
         let tdTagihHtml = "";
         if (isAdminMode) {
             if (!isSelesai) {
                 let bersihWA = nomorWaAsli.replace(/\D/g, '');
                 if (bersihWA.startsWith("0")) bersihWA = "62" + bersihWA.substring(1);
-                const linkWA = `https://wa.me/${bersihWA}?text=${encodeURIComponent(`XX`)}`;
+                const linkWA = `https://wa.me/${bersihWA}?text=${encodeURIComponent("XX")}`;
                 tdTagihHtml = `
 <td style="text-align:center;">
 <a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
 💬 TAGIH
 </a>
-</td>
-`;
+</td>`;
             } else {
                 tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
             }
@@ -691,50 +811,55 @@ function renderBuyersList() {
 </td>
 <td>${tipeRaw}</td>
 <td>${statusHtml}</td>
-${tdTagihHtml}
-`;
-        container.appendChild(tr);
-});
+${tdTagihHtml}`;
 
-// — HABIS — hanya di tab PENDING dan hanya di halaman terakhir
-const isLastPage = !hasMoreServerData && currentPage >= totalLocalPages;
-if (filterMode === "pending" && isLastPage) {
-container.insertAdjacentHTML("beforeend", `
+        container.appendChild(tr);
+    });
+
+    /* --- penanda HABIS di halaman terakhir tab PENDING --- */
+    if (filterMode === "pending" && !canGoNext()) {
+        container.insertAdjacentHTML("beforeend", `
 <tr>
 <td colspan="${isAdminMode ? 4 : 3}" style="text-align:center; color:#10b981; font-weight:bold; font-size:12px; padding:14px; letter-spacing:2px; border-bottom:none;">
 — HABIS —
 </td>
 </tr>`);
+    }
+
+    renderPagination(sourceData);
 }
 
-renderPagination(sourceData);
-}
-
+/* ============================================================
+   TOMBOL HALAMAN
+   ============================================================ */
 function changePage(direction) {
     if (isLoadingMore) return;
 
-    const sourceData = getFilteredData();
-    const totalLocalPages = Math.max(1, Math.ceil(sourceData.length / itemsPerPage));
-    const nextCalculatedPage = currentPage + direction;
+    const filtered = getFilteredData();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+    const target = currentPage + direction;
 
-    if (nextCalculatedPage < 1 || nextCalculatedPage > totalLocalPages) {
-        if (!hasMoreServerData) return;
-        // Minta halaman berikutnya ke server, render cukup sekali di callback
-        autoFetchAttempts = 0;
+    if (direction > 0 && target > totalPages) {
+        if (!canGoNext()) return;
         fetchMoreDataFromServer(allBuyersData.length, 20, () => {
             const baru = getFilteredData();
             const totalBaru = Math.max(1, Math.ceil(baru.length / itemsPerPage));
-            currentPage = Math.min(nextCalculatedPage, totalBaru);
+            currentPage = Math.min(target, totalBaru);
             renderBuyersList();
         });
         return;
     }
 
-    currentPage = nextCalculatedPage;
+    if (target < 1 || target > totalPages) return;
+    currentPage = target;
     renderBuyersList();
 }
-/* --- FORM TRANSAKSI KONTER --- */
+
+    /* ============================================================
+   FORM TRANSAKSI KONTER
+   ============================================================ */
 let isModeAngkaS = true;
+
 function toggleModeInputS() {
     const inputS = document.getElementById("konter-nomor-s");
     const btnToggle = document.getElementById("btn-toggle-input-mode");
@@ -752,22 +877,27 @@ function toggleModeInputS() {
     }
     inputS.focus();
 }
+
 function formatNomorKonter(input) {
     if (!isModeAngkaS) return;
     formatNomorRealtime(input);
 }
+
 function simpanTransaksiKonter() {
     const inputS = document.getElementById("konter-nomor-s").value.trim();
     const jenisV = document.getElementById("konter-jenis-v").value;
     const statusU = document.getElementById("konter-status-u").value;
     const btnSimpan = document.getElementById("btn-simpan-konter");
+
     if (!inputS) {
         alert("Mohon isi Nomor Pelanggan / Data Kolom S!");
         return;
     }
+
     btnSimpan.disabled = true;
     btnSimpan.innerText = "PROSES...";
     btnSimpan.style.opacity = "0.6";
+
     const payload = {
         action: "catat_trx_konter",
         nomorPelanggan: inputS,
@@ -775,6 +905,7 @@ function simpanTransaksiKonter() {
         status: statusU,
         jenisPaket: jenisV
     };
+
     fetch(BUYERS_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -785,12 +916,13 @@ function simpanTransaksiKonter() {
         btnSimpan.disabled = false;
         btnSimpan.innerText = "⚡ SIMPAN";
         btnSimpan.style.opacity = "1";
+
         if (data.status === "success") {
             document.getElementById("konter-nomor-s").value = "";
             allBuyersData = [];
             currentPage = 1;
             isInitialLoad = true;
-            autoFetchAttempts = 0;
+            pendingScanRounds = 0;
             loadPembeli();
         } else {
             alert("⚠️ Gagal menyimpan: " + (data.message || "Error server"));
@@ -805,9 +937,12 @@ function simpanTransaksiKonter() {
     });
 }
 
-/* --- UBAH STATUS PENDING → SELESAI --- */
+/* ============================================================
+   UBAH STATUS PENDING → SELESAI
+   ============================================================ */
 function ubahStatusAction(selectEl, keyUnik, stableKey, nomorRaw, waktuRaw) {
     let selectedVal = selectEl.value;
+
     if (selectedVal !== "Selesai") {
         selectEl.value = "Pending";
         return;
@@ -850,23 +985,31 @@ function ubahStatusAction(selectEl, keyUnik, stableKey, nomorRaw, waktuRaw) {
     });
 }
 
-/* --- PROSES BELI ONLINE --- */
+/* ============================================================
+   PROSES BELI ONLINE
+   ============================================================ */
 function prosesBeli() {
     let nomorInput = document.getElementById("nomor").value.trim();
-    let paketInput = isModeManual ? document.getElementById("paket-manual").value.trim() : document.getElementById("paket").value;
-    if (!nomorInput || nomorInput.length < 10) { 
-        alert("Mohon periksa kembali, nomor HP belum lengkap!"); 
-        return; 
+    let paketInput = isModeManual
+        ? document.getElementById("paket-manual").value.trim()
+        : document.getElementById("paket").value;
+
+    if (!nomorInput || nomorInput.length < 10) {
+        alert("Mohon periksa kembali, nomor HP belum lengkap!");
+        return;
     }
+
     if (!paketInput || paketInput.includes("Gagal") || paketInput.includes("Memuat")) {
         alert("Mohon isi atau pilih nama paket data terlebih dahulu!");
         return;
     }
+
     let btn = document.querySelector("button[onclick='prosesBeli()']");
     if (btn.disabled) return;
     btn.disabled = true;
     btn.style.opacity = "0.6";
     btn.innerText = "MENGIRIM PESANAN...";
+
     fetch(`${SCRIPT_URL}?action=create&nomor=${encodeURIComponent(nomorInput)}&paket=${encodeURIComponent(paketInput)}`, {
         method: "GET",
         redirect: "follow"
@@ -894,6 +1037,7 @@ function prosesBeli() {
 
 function cekStatusKetat() {
     if (!activeOrderId) return;
+
     fetch(`${SCRIPT_URL}?action=check&id=${encodeURIComponent(activeOrderId)}`, {
         method: "GET",
         redirect: "follow"
@@ -910,7 +1054,7 @@ function cekStatusKetat() {
             allBuyersData = [];
             currentPage = 1;
             isInitialLoad = true;
-            autoFetchAttempts = 0;
+            pendingScanRounds = 0;
             loadPembeli();
         }
     })
