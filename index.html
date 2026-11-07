@@ -85,33 +85,37 @@ button:hover { background: #059669; }
 .pagination-container button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* --- KARTU TRANSAKSI (mobile-first) --- */
-.trx-list { display: flex; flex-direction: column; gap: 10px; text-align: left; }
-.trx-card { background: #0f172a; border: 1px solid #334155; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 12px; transition: opacity .28s ease, transform .28s ease, max-height .28s ease; max-height: 220px; overflow: hidden; }
-.trx-card.selesai { border-left-color: #10b981; opacity: .8; }
-.trx-card.leaving { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -10px; border-width: 0; }
-.trx-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.trx-name { font-size: 15px; font-weight: 700; color: #f8fafc; letter-spacing: .3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
-.badge-pending { background: rgba(245,158,11,.15); color: #fbbf24; }
-.badge-pending .dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; animation: pulse 1.5s infinite; }
-.badge-selesai { background: rgba(16,185,129,.15); color: #34d399; }
-.trx-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 8px; }
-.chip { font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,.12); padding: 3px 8px; border-radius: 6px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.trx-time { font-size: 11px; color: #94a3b8; }
-.umur { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(148,163,184,.15); color: #cbd5e1; }
-.umur.lama { background: rgba(245,158,11,.18); color: #fbbf24; }
-.umur.kritis { background: rgba(239,68,68,.18); color: #f87171; }
-.trx-actions { display: flex; gap: 8px; margin-top: 12px; }
-.btn-lunas { flex: 1; width: auto; margin: 0; padding: 12px; font-size: 14px; border-radius: 10px; background: #10b981; }
-.btn-lunas:active { transform: scale(.98); }
-.btn-wa { flex: 0 0 48px; display: flex; align-items: center; justify-content: center; background: #25d366; border-radius: 10px; text-decoration: none; font-size: 18px; }
+.trx-list { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.trx-card { display: flex; align-items: center; gap: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 14px; transition: opacity .28s ease, transform .28s ease, max-height .28s ease; max-height: 260px; overflow: hidden; }
+.trx-card.selesai { opacity: .75; }
+.trx-card.leaving { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -12px; border-width: 0; }
+.trx-left { flex: 1; min-width: 0; }
+.trx-right { display: flex; flex-direction: column; gap: 8px; flex: 0 0 118px; }
+.trx-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 6px; }
+.trx-name { font-size: 17px; font-weight: 800; color: #f8fafc; letter-spacing: .2px; }
+.pill { font-size: 11px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.pill-belum { background: #e11d1d; }
+.pill-lunas { background: #059669; }
+.trx-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; margin-top: 6px; min-width: 0; }
+.trx-row svg { flex: 0 0 16px; width: 16px; height: 16px; stroke: #94a3b8; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.trx-row span { min-width: 0; }
+.trx-row strong { color: #f8fafc; font-weight: 700; letter-spacing: .3px; }
+.trx-row.lama { color: #fbbf24; }
+.trx-row.lama svg { stroke: #fbbf24; }
+.trx-row.kritis { color: #f87171; }
+.trx-row.kritis svg { stroke: #f87171; }
+.btn-outline { width: 100%; margin: 0; padding: 11px 8px; font-size: 13px; font-weight: 600; border-radius: 10px; background: transparent; color: #94a3b8; border: 1px solid #475569; white-space: nowrap; }
+.btn-outline:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+.btn-outline:active { transform: scale(.98); }
+.btn-wa { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; box-sizing: border-box; padding: 11px 8px; font-size: 13px; font-weight: 700; border-radius: 10px; background: #16a34a; color: #fff; text-decoration: none; white-space: nowrap; }
+.btn-wa svg { width: 18px; height: 18px; fill: #fff; stroke: none; }
 .trx-empty { text-align: center; color: #94a3b8; padding: 22px 10px; font-size: 13px; line-height: 1.6; }
 .trx-empty.ok { color: #10b981; font-weight: 700; }
 .trx-empty.err { color: #f87171; }
 .trx-end { text-align: center; color: #10b981; font-weight: 700; font-size: 12px; letter-spacing: 2px; padding: 12px; }
 .trx-more { text-align: center; color: #94a3b8; font-size: 12px; padding: 10px; }
 .trx-summary { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: #fbbf24; font-size: 12px; padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; text-align: left; }
-.skeleton { height: 78px; border-radius: 12px; background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+.skeleton { height: 100px; border-radius: 14px; background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 /* --- BOTTOM SHEET KONFIRMASI LUNAS --- */
 .sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10000; }
@@ -120,8 +124,7 @@ button:hover { background: #059669; }
 .sheet-overlay.show .sheet { transform: translateY(0); }
 .sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #475569; margin: 0 auto 14px; }
 .sheet-title { font-size: 17px; font-weight: 700; color: #f8fafc; }
-.sheet-card { background: #0f172a; border: 1px solid #334155; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 12px; margin: 14px 0 10px; text-align: left; }
-.sheet-card .trx-name { font-size: 16px; }
+.sheet-card { background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 14px; margin: 14px 0 10px; text-align: left; }
 .sheet-note { font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5; }
 .sheet-btn-ya { margin: 16px 0 0; padding: 15px; font-size: 16px; border-radius: 12px; background: #10b981; }
 .sheet-btn-ya:disabled { opacity: .6; cursor: wait; }
@@ -272,14 +275,7 @@ Berikutnya ▶
 <div class="sheet">
 <div class="sheet-handle"></div>
 <div class="sheet-title">Tandai sudah lunas?</div>
-<div class="sheet-card">
-<div class="trx-name" id="sheet-nama">-</div>
-<div class="trx-meta">
-<span class="chip" id="sheet-jenis">-</span>
-<span class="trx-time" id="sheet-waktu">-</span>
-<span class="umur" id="sheet-umur"></span>
-</div>
-</div>
+<div class="sheet-card" id="sheet-card"></div>
 <p class="sheet-note">Setelah diubah ke Selesai, status tidak bisa dikembalikan dari halaman ini.</p>
 <button type="button" class="sheet-btn-ya" id="btn-lunas-ya" onclick="konfirmasiLunas()">✓ Ya, Sudah Lunas</button>
 <button type="button" class="sheet-btn-batal" onclick="tutupSheetLunas()">Batal</button>
@@ -878,6 +874,43 @@ function umurTrx(teks) {
     return { ts: ts, hari: hari, label: label };
 }
 
+const IKON = {
+    tiket: '<svg viewBox="0 0 24 24"><path d="M3 8.5V6h18v2.5a2.5 2.5 0 0 0 0 7V18H3v-2.5a2.5 2.5 0 0 0 0-7z"/><path d="M14 6v12" stroke-dasharray="2 2"/></svg>',
+    dok: '<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>',
+    jam: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    wa: '<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+};
+
+/* "12. 5 november 16:28" -> "12 • 5 November 16:28" */
+function formatWaktuTampil(q) {
+    const t = String(q || "").trim();
+    if (!t) return "Baru saja";
+    const m = t.match(/^(?:(\d+)\.\s*)?(.+)$/);
+    if (!m) return t;
+    const sisa = m[2].replace(/[a-zA-Z]+/, w => w.charAt(0).toUpperCase() + w.slice(1));
+    return m[1] ? m[1] + " • " + sisa : sisa;
+}
+
+function teksUmur(u) {
+    if (u.label === "baru") return "Dipesan baru saja";
+    return "Dipesan " + u.label + " yang lalu";
+}
+
+/* isi kiri kartu: nama + status, kode, waktu, umur (dipakai kartu daftar & bottom sheet) */
+function infoKartuHtml(nama, tipe, waktu, u, isSelesai) {
+    const pill = isSelesai
+        ? '<span class="pill pill-lunas">Lunas</span>'
+        : '<span class="pill pill-belum">Belum Lunas</span>';
+    let umurRow = "";
+    if (u) {
+        const kelas = u.hari >= 3 ? "kritis" : (u.hari >= 1 ? "lama" : "");
+        umurRow = `<div class="trx-row ${kelas}">${IKON.jam}<span>${esc(teksUmur(u))}</span></div>`;
+    }
+    return `<div class="trx-head"><span class="trx-name">${esc(nama)}</span>${pill}</div>
+<div class="trx-row">${IKON.tiket}<span>Kode: <strong>${esc(tipe)}</strong></span></div>
+<div class="trx-row">${IKON.dok}<span>${esc(formatWaktuTampil(waktu))}</span></div>${umurRow}`;
+}
+
 let renderedItems = [];
 
 function renderRingkasanPending(sourceData) {
@@ -961,36 +994,24 @@ function renderBuyersList() {
         });
         const idx = renderedItems.length - 1;
 
-        let umurHtml = "";
-        if (!isSelesai) {
-            const u = umurTrx(waktuRaw);
-            if (u) {
-                const kelas = u.hari >= 3 ? "kritis" : (u.hari >= 1 ? "lama" : "");
-                umurHtml = `<span class="umur ${kelas}">⏱ ${esc(u.label)}</span>`;
-            }
-        }
+        const u = isSelesai ? null : umurTrx(waktuRaw);
 
-        let aksiHtml = "";
+        let kananHtml = "";
         if (!isSelesai) {
             let waBtn = "";
             if (isAdminMode && nomorWaAsli) {
                 let bersihWA = nomorWaAsli.replace(/\D/g, "");
                 if (bersihWA.startsWith("0")) bersihWA = "62" + bersihWA.substring(1);
                 const linkWA = `https://wa.me/${bersihWA}?text=${encodeURIComponent("XX")}`;
-                waBtn = `<a class="btn-wa" href="${linkWA}" target="_blank" rel="noopener" title="Tagih lewat WhatsApp">💬</a>`;
+                waBtn = `<a class="btn-wa" href="${linkWA}" target="_blank" rel="noopener">${IKON.wa}Chat WA</a>`;
             }
-            aksiHtml = `<div class="trx-actions"><button type="button" class="btn-lunas" onclick="bukaSheetLunas(${idx})">✓ Tandai Lunas</button>${waBtn}</div>`;
+            kananHtml = `<div class="trx-right"><button type="button" class="btn-outline" onclick="bukaSheetLunas(${idx})">Tandai Lunas</button>${waBtn}</div>`;
         }
-
-        const badge = isSelesai
-            ? `<span class="badge badge-selesai">✓ Selesai</span>`
-            : `<span class="badge badge-pending"><i class="dot"></i>Pending</span>`;
 
         html += `
 <div class="trx-card ${isSelesai ? "selesai" : "pending"}" data-key="${esc(stableKey)}">
-<div class="trx-top"><div class="trx-name">${esc(tampilanNomor)}</div>${badge}</div>
-<div class="trx-meta"><span class="chip">${esc(tipeRaw)}</span><span class="trx-time">${esc(waktuRaw || "Baru saja")}</span>${umurHtml}</div>
-${aksiHtml}
+<div class="trx-left">${infoKartuHtml(tampilanNomor, tipeRaw, waktuRaw, u, isSelesai)}</div>
+${kananHtml}
 </div>`;
     });
 
@@ -1142,13 +1163,7 @@ function bukaSheetLunas(i) {
     const it = renderedItems[i];
     if (!it) return;
     sheetItem = it;   // salin supaya aman walau tabel di-refresh
-    document.getElementById("sheet-nama").innerText = it.tampilan;
-    document.getElementById("sheet-jenis").innerText = it.tipe;
-    document.getElementById("sheet-waktu").innerText = it.waktuRaw || "Baru saja";
-    const u = umurTrx(it.waktuRaw);
-    const elUmur = document.getElementById("sheet-umur");
-    elUmur.innerText = u ? "⏱ " + u.label : "";
-    elUmur.className = "umur" + (u ? (u.hari >= 3 ? " kritis" : (u.hari >= 1 ? " lama" : "")) : "");
+    document.getElementById("sheet-card").innerHTML = infoKartuHtml(it.tampilan, it.tipe, it.waktuRaw, umurTrx(it.waktuRaw), false);
     const btn = document.getElementById("btn-lunas-ya");
     btn.disabled = false;
     btn.innerText = "✓ Ya, Sudah Lunas";
