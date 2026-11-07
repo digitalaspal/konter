@@ -82,6 +82,7 @@ button:hover { background: #059669; }
 .btn-filter.active { background: #10b981; color: #fff; }
 #btn-filter-pending.active { background: #f59e0b; color: #1e293b; }
 .badge-count { display: inline-block; font-size: 10px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 8px; margin-left: 4px; }
+.pagination-container button:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -202,7 +203,7 @@ button:hover { background: #059669; }
 <span id="page-info" style="font-size: 12px; color: #94a3b8; font-weight: bold;">
 Halaman 1
 </span>
-<button id="btn-next" onclick="changePage(1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;">
+<button id="btn-next" onclick="changePage(1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;" disabled>
 Berikutnya ▶
 </button>
 </div>
@@ -269,8 +270,15 @@ let adminClickCount = 0;
 
 /* state filter pending */
 let filterMode = "semua";          // "semua" | "pending"
-let pendingScanRounds = 0;         // berapa kali cari tapi tidak dapat pending baru
-const MAX_PENDING_SCAN = 3;        // setelah 3 kali, tombol Berikutnya dimatikan
+let pendingScanRounds = 0;         // (tidak dipakai lagi oleh tab pending, dibiarkan agar kode lama aman)
+const MAX_PENDING_SCAN = 3;
+
+/* state tab PENDING terpisah (scan semua data, paging lokal) */
+let pendingData = [];
+let pendingLoading = false;
+let pendingLoaded = false;
+let pendingLastScan = 0;
+const PENDING_MAX_PAGES = 100;     // batas pengaman: 100 x 20 = 2000 baris
 
 /* ============================================================
    SUARA
@@ -498,7 +506,13 @@ window.onload = function() {
         tampilkanGagalKoneksi();
     });
 
-    setInterval(loadPembeli, 10000);
+    /* refresh tabel tiap 10 detik; tab PENDING di-scan ulang senyap tiap 30 detik */
+    setInterval(() => {
+        loadPembeli();
+        if (filterMode === "pending" && !pendingLoading && Date.now() - pendingLastScan > 30000) {
+            scanSemuaPending(true);
+        }
+    }, 10000);
 };
 
 const loadingDotsHtml = `
@@ -538,6 +552,7 @@ function aktifkanModeAdmin() {
             currentPage = 1;
             isInitialLoad = true;
             pendingScanRounds = 0;
+            pendingLastScan = 0;
             loadPembeli();
         }
     }
@@ -546,7 +561,7 @@ function aktifkanModeAdmin() {
 function loadPembeli() {
     if (allBuyersData.length === 0 && isInitialLoad) {
         const container = document.getElementById("buyers-list");
-        if (container) container.innerHTML = loadingDotsHtml;
+        if (container && filterMode !== "pending") container.innerHTML = loadingDotsHtml;
         fetchMoreDataFromServer(0, 20);
         return;
     }
@@ -567,12 +582,12 @@ function loadPembeli() {
     });
 }
 
-/* Baris di bawah: TIDAK ada renderBuyersList() ganda, tidak ada autoFetchAttempts */
 function fetchMoreDataFromServer(offset, limit, callback) {
     isLoadingMore = true;
     const btnNext = document.getElementById("btn-next");
     if (btnNext) {
         btnNext.innerHTML = `⏳ Memuat<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>`;
+        btnNext.disabled = true;
     }
 
     fetch(`${BUYERS_URL}?action=getPembeli&start=${offset}&limit=${limit}&pin=${encodeURIComponent(savedPin)}`)
@@ -596,21 +611,10 @@ function fetchMoreDataFromServer(offset, limit, callback) {
             localStorage.removeItem("ARDAF_ADMIN_PIN");
         }
 
-        const pendingSebelum = allBuyersData.filter(isPendingItem).length;
-
         if (data.pembeli.length > 0) {
             allBuyersData = allBuyersData.concat(data.pembeli);
         }
         hasMoreServerData = data.hasMore;
-
-        const pendingSesudah = allBuyersData.filter(isPendingItem).length;
-        if (filterMode === "pending") {
-            if (pendingSesudah > pendingSebelum) {
-                pendingScanRounds = 0;
-            } else {
-                pendingScanRounds++;
-            }
-        }
 
         if (callback) { callback(); } else { renderBuyersList(); }
     })
@@ -618,24 +622,69 @@ function fetchMoreDataFromServer(offset, limit, callback) {
         isLoadingMore = false;
         isInitialLoad = false;
         hasMoreServerData = false;
-        pendingScanRounds = MAX_PENDING_SCAN;
         if (btnNext) btnNext.innerText = "Berikutnya ▶";
         console.error("Error fetch data:", err);
         renderBuyersList();
     });
 }
-    /* ============================================================
+
+/* ============================================================
+   TAB PENDING TERPISAH: SCAN SEMUA DATA, PAGING LOKAL
+   ============================================================ */
+async function scanSemuaPending(silent) {
+    if (pendingLoading) return;
+    pendingLoading = true;
+    if (!silent) {
+        pendingData = [];
+        renderBuyersList();
+    }
+
+    const hasil = [];
+    const seen = new Set();
+    let start = 0;
+
+    try {
+        for (let i = 0; i < PENDING_MAX_PAGES; i++) {
+            const res = await fetch(`${BUYERS_URL}?action=getPembeli&start=${start}&limit=20&pin=${encodeURIComponent(savedPin)}`);
+            const data = await res.json();
+            if (!data || !Array.isArray(data.pembeli)) break;
+
+            isAdminMode = data.isAdmin || isAdminMode;
+
+            data.pembeli.forEach(item => {
+                const key = (item.r || item.digit || "") + "_" + (item.q || "");
+                if (seen.has(key)) return;
+                seen.add(key);
+                if (isPendingItem(item)) hasil.push(item);
+            });
+
+            start += data.pembeli.length;
+            if (!data.hasMore || data.pembeli.length === 0) break;
+        }
+        pendingData = hasil;
+        pendingLoaded = true;
+    } catch (err) {
+        console.error("Gagal scan pending:", err);
+        if (!pendingLoaded) pendingData = hasil;
+    } finally {
+        pendingLoading = false;
+        pendingLastScan = Date.now();
+        renderBuyersList();
+    }
+}
+
+/* ============================================================
    FILTER PENDING
    ============================================================ */
 function setFilterMode(mode) {
     filterMode = mode;
     currentPage = 1;
-    pendingScanRounds = 0;
     const btnSemua = document.getElementById("btn-filter-semua");
     const btnPending = document.getElementById("btn-filter-pending");
     if (btnSemua) btnSemua.classList.toggle("active", mode === "semua");
     if (btnPending) btnPending.classList.toggle("active", mode === "pending");
-    renderBuyersList();
+    if (mode === "pending") scanSemuaPending(false);
+    else renderBuyersList();
 }
 
 function getStatusOfItem(item) {
@@ -651,29 +700,29 @@ function isPendingItem(item) {
 }
 
 function getFilteredData() {
-    if (filterMode === "pending") return allBuyersData.filter(isPendingItem);
+    if (filterMode === "pending") return pendingData.filter(isPendingItem);
     return allBuyersData;
 }
 
 function updatePendingBadge() {
     const el = document.getElementById("badge-pending");
     if (!el) return;
-    const n = allBuyersData.filter(isPendingItem).length;
-    el.innerText = hasMoreServerData ? n + "+" : n;
+    const exact = (filterMode === "pending" && pendingLoaded);
+    const n = (exact ? pendingData : allBuyersData).filter(isPendingItem).length;
+    el.innerText = (!exact && hasMoreServerData) ? n + "+" : n;
 }
 
 /* Penentu tombol Berikutnya aktif atau tidak */
 function canGoNext() {
-    if (isLoadingMore) return false;
-
     const filtered = getFilteredData();
     const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
 
-    if (currentPage < totalPages) return true;
-    if (!hasMoreServerData) return false;
-    if (filterMode === "semua") return true;
+    /* tab PENDING: murni lokal, tidak pernah memanggil server */
+    if (filterMode === "pending") return currentPage < totalPages;
 
-    return pendingScanRounds < MAX_PENDING_SCAN;
+    if (isLoadingMore) return false;
+    if (currentPage < totalPages) return true;
+    return hasMoreServerData;
 }
 
 function renderPagination(sourceData) {
@@ -723,33 +772,16 @@ function renderBuyersList() {
     /* --- tidak ada data --- */
     if (sourceData.length === 0) {
         const colSpan = isAdminMode ? 4 : 3;
-        const bolehCariLagi = filterMode === "pending"
-            && hasMoreServerData
-            && !isLoadingMore
-            && pendingScanRounds < MAX_PENDING_SCAN;
-
-        if (bolehCariLagi) {
-            container.innerHTML = `
-<tr>
-<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">
-🔎 Mencari transaksi pending lain<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
-</td>
-</tr>`;
-            fetchMoreDataFromServer(allBuyersData.length, 20);
-            renderPagination(sourceData);
-            return;
+        let isi;
+        if (filterMode === "pending" && pendingLoading) {
+            isi = `<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">🔎 Mengambil semua transaksi pending<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></td>`;
+        } else {
+            const pesan = (filterMode === "pending")
+                ? "✅ HABIS — tidak ada transaksi pending"
+                : "Belum ada transaksi";
+            isi = `<td colspan="${colSpan}" style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">${pesan}</td>`;
         }
-
-        const pesan = (filterMode === "pending")
-            ? "✅ HABIS — tidak ada transaksi pending"
-            : "Belum ada transaksi";
-
-        container.innerHTML = `
-<tr>
-<td colspan="${colSpan}" style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">
-${pesan}
-</td>
-</tr>`;
+        container.innerHTML = `<tr>${isi}</tr>`;
         renderPagination(sourceData);
         return;
     }
@@ -817,7 +849,7 @@ ${tdTagihHtml}`;
     });
 
     /* --- penanda HABIS di halaman terakhir tab PENDING --- */
-    if (filterMode === "pending" && !canGoNext()) {
+    if (filterMode === "pending" && !pendingLoading && !canGoNext()) {
         container.insertAdjacentHTML("beforeend", `
 <tr>
 <td colspan="${isAdminMode ? 4 : 3}" style="text-align:center; color:#10b981; font-weight:bold; font-size:12px; padding:14px; letter-spacing:2px; border-bottom:none;">
@@ -833,11 +865,19 @@ ${tdTagihHtml}`;
    TOMBOL HALAMAN
    ============================================================ */
 function changePage(direction) {
-    if (isLoadingMore) return;
-
     const filtered = getFilteredData();
     const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
     const target = currentPage + direction;
+
+    /* tab PENDING: hanya pindah halaman lokal */
+    if (filterMode === "pending") {
+        if (target < 1 || target > totalPages) return;
+        currentPage = target;
+        renderBuyersList();
+        return;
+    }
+
+    if (isLoadingMore) return;
 
     if (direction > 0 && target > totalPages) {
         if (!canGoNext()) return;
@@ -855,7 +895,7 @@ function changePage(direction) {
     renderBuyersList();
 }
 
-    /* ============================================================
+/* ============================================================
    FORM TRANSAKSI KONTER
    ============================================================ */
 let isModeAngkaS = true;
@@ -923,6 +963,7 @@ function simpanTransaksiKonter() {
             currentPage = 1;
             isInitialLoad = true;
             pendingScanRounds = 0;
+            pendingLastScan = 0;   // paksa scan ulang tab pending
             loadPembeli();
         } else {
             alert("⚠️ Gagal menyimpan: " + (data.message || "Error server"));
@@ -1055,6 +1096,7 @@ function cekStatusKetat() {
             currentPage = 1;
             isInitialLoad = true;
             pendingScanRounds = 0;
+            pendingLastScan = 0;
             loadPembeli();
         }
     })
