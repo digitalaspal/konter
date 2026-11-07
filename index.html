@@ -862,6 +862,7 @@ function renderBuyersList() {
         const empatDigit = item.digit || "";
         const waktuRaw = item.q || "";
         const namaRaw = item.t || "HPMM";
+        const rowNum = item.rowNum || "";
 
         const stableKey = (nomorWaAsli || empatDigit) + "_" + waktuRaw;
         const keyUnik = stableKey + "_" + (startIndex + index);
@@ -876,7 +877,7 @@ function renderBuyersList() {
         const isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
 
         const statusHtml = `
-<select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${stableKey}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}')" ${isSelesai ? 'disabled' : ''}>
+<select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${stableKey}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}', '${rowNum}')" ${isSelesai ? 'disabled' : ''}>
 <option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
 <option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
 </select>`;
@@ -1055,7 +1056,7 @@ function simpanTransaksiKonter() {
 /* ============================================================
    UBAH STATUS PENDING → SELESAI
    ============================================================ */
-function ubahStatusAction(selectEl, keyUnik, stableKey, nomorRaw, waktuRaw) {
+function ubahStatusAction(selectEl, keyUnik, stableKey, nomorRaw, waktuRaw, rowNum) {
     let selectedVal = selectEl.value;
 
     if (selectedVal !== "Selesai") {
@@ -1075,7 +1076,10 @@ function ubahStatusAction(selectEl, keyUnik, stableKey, nomorRaw, waktuRaw) {
 
     const cleanNomor = nomorRaw ? String(nomorRaw).trim() : "";
     const cleanWaktu = waktuRaw ? String(waktuRaw).trim() : "";
-    const targetUrl = `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
+    /* jika server sudah mengirim rowNum -> update langsung ke baris aslinya (aman di tab SEMUA maupun PENDING) */
+    const targetUrl = rowNum
+        ? `${BUYERS_URL}?action=updateStatusRow&row=${encodeURIComponent(rowNum)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`
+        : `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
 
     fetch(targetUrl, { method: "GET", redirect: "follow" })
     .then(res => res.json())
