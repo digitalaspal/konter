@@ -279,6 +279,8 @@ let pendingLoading = false;
 let pendingLoaded = false;
 let pendingLastScan = 0;
 const PENDING_MAX_PAGES = 100;     // batas pengaman: 100 x 20 = 2000 baris
+let pendingScanned = 0;          // jumlah baris yang sudah dicek saat scan
+let pendingError = false;        // scan gagal / timeout
 
 /* ============================================================
    SUARA
@@ -631,41 +633,79 @@ function fetchMoreDataFromServer(offset, limit, callback) {
 /* ============================================================
    TAB PENDING TERPISAH: SCAN SEMUA DATA, PAGING LOKAL
    ============================================================ */
+function fetchHalamanPembeli(start) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000); // timeout 20 detik per request
+    return fetch(`${BUYERS_URL}?action=getPembeli&start=${start}&limit=20&pin=${encodeURIComponent(savedPin)}`, { signal: ctrl.signal })
+        .then(res => res.json())
+        .finally(() => clearTimeout(timer));
+}
+
 async function scanSemuaPending(silent) {
     if (pendingLoading) return;
     pendingLoading = true;
-    if (!silent) {
-        pendingData = [];
-        renderBuyersList();
-    }
+    pendingError = false;
+    pendingScanned = 0;
 
     const hasil = [];
     const seen = new Set();
+    const tambah = (list) => {
+        list.forEach(item => {
+            const key = (item.r || item.digit || "") + "_" + (item.q || "");
+            if (seen.has(key)) return;
+            seen.add(key);
+            if (isPendingItem(item)) hasil.push(item);
+        });
+    };
+
+    if (!silent) {
+        pendingData = [];
+        /* data halaman pertama sudah ada di memori -> tampilkan langsung */
+        tambah(allBuyersData.slice(0, 20));
+        pendingData = hasil.slice();
+        seen.clear(); hasil.length = 0;   // dihitung ulang dari server supaya akurat
+        renderBuyersList();
+    }
+
     let start = 0;
+    let gagal = 0;
 
     try {
         for (let i = 0; i < PENDING_MAX_PAGES; i++) {
-            const res = await fetch(`${BUYERS_URL}?action=getPembeli&start=${start}&limit=20&pin=${encodeURIComponent(savedPin)}`);
-            const data = await res.json();
-            if (!data || !Array.isArray(data.pembeli)) break;
+            let data;
+            try {
+                data = await fetchHalamanPembeli(start);
+            } catch (err) {
+                console.error("Scan pending gagal di start=" + start, err);
+                gagal++;
+                if (gagal >= 2) { pendingError = true; break; }
+                continue; // coba ulang halaman yang sama sekali lagi
+            }
+
+            if (!data || !Array.isArray(data.pembeli)) { pendingError = (start === 0); break; }
 
             isAdminMode = data.isAdmin || isAdminMode;
-
-            data.pembeli.forEach(item => {
-                const key = (item.r || item.digit || "") + "_" + (item.q || "");
-                if (seen.has(key)) return;
-                seen.add(key);
-                if (isPendingItem(item)) hasil.push(item);
-            });
+            tambah(data.pembeli);
 
             start += data.pembeli.length;
+            pendingScanned = start;
+
+            /* tampilkan bertahap supaya data langsung muncul */
+            if (!silent) {
+                pendingData = hasil.slice();
+                renderBuyersList();
+            }
+
             if (!data.hasMore || data.pembeli.length === 0) break;
         }
-        pendingData = hasil;
-        pendingLoaded = true;
+
+        if (!pendingError || hasil.length > 0) {
+            pendingData = hasil;
+            pendingLoaded = !pendingError;
+        }
     } catch (err) {
         console.error("Gagal scan pending:", err);
-        if (!pendingLoaded) pendingData = hasil;
+        pendingError = true;
     } finally {
         pendingLoading = false;
         pendingLastScan = Date.now();
@@ -774,7 +814,9 @@ function renderBuyersList() {
         const colSpan = isAdminMode ? 4 : 3;
         let isi;
         if (filterMode === "pending" && pendingLoading) {
-            isi = `<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">🔎 Mengambil semua transaksi pending<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></td>`;
+            isi = `<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">🔎 Mengambil semua transaksi pending (${pendingScanned} baris dicek)<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></td>`;
+        } else if (filterMode === "pending" && pendingError) {
+            isi = `<td colspan="${colSpan}" style="text-align:center; color:#f87171; padding:20px; line-height:1.6;">⚠️ Gagal mengambil data pending.<br><span style="font-size:12px; color:#94a3b8;">Tekan tombol PENDING sekali lagi untuk mencoba ulang.</span></td>`;
         } else {
             const pesan = (filterMode === "pending")
                 ? "✅ HABIS — tidak ada transaksi pending"
@@ -847,6 +889,16 @@ ${tdTagihHtml}`;
 
         container.appendChild(tr);
     });
+
+    /* --- info scan masih berjalan (data sudah tampil bertahap) --- */
+    if (filterMode === "pending" && pendingLoading) {
+        container.insertAdjacentHTML("beforeend", `
+<tr>
+<td colspan="${isAdminMode ? 4 : 3}" style="text-align:center; color:#94a3b8; font-size:12px; padding:12px; border-bottom:none;">
+🔎 Masih mencari pending lain (${pendingScanned} baris dicek)<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+</td>
+</tr>`);
+    }
 
     /* --- penanda HABIS di halaman terakhir tab PENDING --- */
     if (filterMode === "pending" && !pendingLoading && !canGoNext()) {
