@@ -83,6 +83,54 @@ button:hover { background: #059669; }
 #btn-filter-pending.active { background: #f59e0b; color: #1e293b; }
 .badge-count { display: inline-block; font-size: 10px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 8px; margin-left: 4px; }
 .pagination-container button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* --- KARTU TRANSAKSI (mobile-first) --- */
+.trx-list { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.trx-card { background: #0f172a; border: 1px solid #334155; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 12px; transition: opacity .28s ease, transform .28s ease, max-height .28s ease; max-height: 220px; overflow: hidden; }
+.trx-card.selesai { border-left-color: #10b981; opacity: .8; }
+.trx-card.leaving { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -10px; border-width: 0; }
+.trx-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.trx-name { font-size: 15px; font-weight: 700; color: #f8fafc; letter-spacing: .3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+.badge-pending { background: rgba(245,158,11,.15); color: #fbbf24; }
+.badge-pending .dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; animation: pulse 1.5s infinite; }
+.badge-selesai { background: rgba(16,185,129,.15); color: #34d399; }
+.trx-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 8px; }
+.chip { font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,.12); padding: 3px 8px; border-radius: 6px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trx-time { font-size: 11px; color: #94a3b8; }
+.umur { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(148,163,184,.15); color: #cbd5e1; }
+.umur.lama { background: rgba(245,158,11,.18); color: #fbbf24; }
+.umur.kritis { background: rgba(239,68,68,.18); color: #f87171; }
+.trx-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-lunas { flex: 1; width: auto; margin: 0; padding: 12px; font-size: 14px; border-radius: 10px; background: #10b981; }
+.btn-lunas:active { transform: scale(.98); }
+.btn-wa { flex: 0 0 48px; display: flex; align-items: center; justify-content: center; background: #25d366; border-radius: 10px; text-decoration: none; font-size: 18px; }
+.trx-empty { text-align: center; color: #94a3b8; padding: 22px 10px; font-size: 13px; line-height: 1.6; }
+.trx-empty.ok { color: #10b981; font-weight: 700; }
+.trx-empty.err { color: #f87171; }
+.trx-end { text-align: center; color: #10b981; font-weight: 700; font-size: 12px; letter-spacing: 2px; padding: 12px; }
+.trx-more { text-align: center; color: #94a3b8; font-size: 12px; padding: 10px; }
+.trx-summary { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: #fbbf24; font-size: 12px; padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; text-align: left; }
+.skeleton { height: 78px; border-radius: 12px; background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+/* --- BOTTOM SHEET KONFIRMASI LUNAS --- */
+.sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10000; }
+.sheet-overlay.show { opacity: 1; pointer-events: auto; }
+.sheet { background: #1e293b; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 12px 18px calc(18px + env(safe-area-inset-bottom)); box-sizing: border-box; transform: translateY(100%); transition: transform .25s ease; text-align: center; }
+.sheet-overlay.show .sheet { transform: translateY(0); }
+.sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #475569; margin: 0 auto 14px; }
+.sheet-title { font-size: 17px; font-weight: 700; color: #f8fafc; }
+.sheet-card { background: #0f172a; border: 1px solid #334155; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 12px; margin: 14px 0 10px; text-align: left; }
+.sheet-card .trx-name { font-size: 16px; }
+.sheet-note { font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5; }
+.sheet-btn-ya { margin: 16px 0 0; padding: 15px; font-size: 16px; border-radius: 12px; background: #10b981; }
+.sheet-btn-ya:disabled { opacity: .6; cursor: wait; }
+.sheet-btn-batal { margin: 8px 0 0; padding: 13px; font-size: 14px; border-radius: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; }
+.sheet-btn-batal:hover { background: rgba(255,255,255,.05); }
+/* --- TOAST --- */
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); background: #064e3b; color: #34d399; border: 1px solid #10b981; padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 11000; max-width: 90%; text-align: center; }
+.toast.err { background: #450a0a; color: #f87171; border-color: #ef4444; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -144,7 +192,7 @@ button:hover { background: #059669; }
 <!-- CONTAINER DAFTAR PEMBELI HARI INI -->
 <div class="buyers-card">
 <div class="buyers-header">
-<h3>🔥Laporan Hari Ini</h3>
+<h3>🔥Laporan Hari Ini <span id="admin-lock" onclick="aktifkanModeAdmin()" title="Klik 2x untuk PIN Admin" style="cursor:pointer; opacity:.7;">🔒</span></h3>
 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
 <div class="filter-group">
 <button type="button" class="btn-filter active" id="btn-filter-semua" onclick="setFilterMode('semua')">SEMUA</button>
@@ -181,21 +229,10 @@ button:hover { background: #059669; }
 </button>
 </div>
 </div>
-<div class="table-responsive">
-<table class="buyers-table">
-<thead id="buyers-thead">
-<tr>
-<th>NOMOR</th>
-<th>TIPE</th>
-<th>STATUS</th>
-</tr>
-</thead>
-<tbody id="buyers-list">
-<tr>
-<td colspan="3" style="text-align:center; color:#94a3b8;" class="loading-dots">⏳ Memuat laporan</td>
-</tr>
-</tbody>
-</table>
+<div id="trx-summary" class="trx-summary hidden"></div>
+<div id="buyers-list" class="trx-list">
+<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+</div>
 <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 0 5px;">
 <button id="btn-prev" onclick="changePage(-1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;" disabled>
 ◀ Sebelumnya
@@ -206,7 +243,6 @@ Halaman 1
 <button id="btn-next" onclick="changePage(1)" style="width: auto; margin: 0; padding: 6px 14px; font-size: 12px; background: #334155;" disabled>
 Berikutnya ▶
 </button>
-</div>
 </div>
 </div>
 <!-- MODAL KAMERA SCAN -->
@@ -231,6 +267,25 @@ Berikutnya ▶
 <button class="btn-close-modal" onclick="tutupModalPilihan()" style="margin-top:15px;">Batal</button>
 </div>
 </div>
+<!-- BOTTOM SHEET KONFIRMASI LUNAS -->
+<div class="sheet-overlay" id="sheet-lunas" onclick="tutupSheetLunas(event)">
+<div class="sheet">
+<div class="sheet-handle"></div>
+<div class="sheet-title">Tandai sudah lunas?</div>
+<div class="sheet-card">
+<div class="trx-name" id="sheet-nama">-</div>
+<div class="trx-meta">
+<span class="chip" id="sheet-jenis">-</span>
+<span class="trx-time" id="sheet-waktu">-</span>
+<span class="umur" id="sheet-umur"></span>
+</div>
+</div>
+<p class="sheet-note">Setelah diubah ke Selesai, status tidak bisa dikembalikan dari halaman ini.</p>
+<button type="button" class="sheet-btn-ya" id="btn-lunas-ya" onclick="konfirmasiLunas()">✓ Ya, Sudah Lunas</button>
+<button type="button" class="sheet-btn-batal" onclick="tutupSheetLunas()">Batal</button>
+</div>
+</div>
+<div class="toast" id="toast"></div>
 <script>
 /* ============================================================
    KONFIGURASI
@@ -517,26 +572,14 @@ window.onload = function() {
     }, 10000);
 };
 
-const loadingDotsHtml = `
-<tr>
-<td colspan="3" style="text-align:center; color:#94a3b8; padding: 20px;">
-Memuat daftar pembeli<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
-</td>
-</tr>
-`;
+const loadingDotsHtml = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
 
 function tampilkanGagalKoneksi() {
     const container = document.getElementById("buyers-list");
     const selectPaket = document.getElementById("paket");
     if (selectPaket) selectPaket.innerHTML = "<option value=''>❌ Gagal memuat paket</option>";
     if (container) {
-        container.innerHTML = `
-<tr>
-<td colspan="3" style="text-align:center; color:#f87171; padding: 20px; line-height:1.6;">
-⚠️ <strong>Gagal terhubung ke server.</strong><br>
-<span style="font-size:12px; color:#94a3b8;">Periksa koneksi, matikan ad blocker / antivirus web shield, lalu muat ulang halaman.</span>
-</td>
-</tr>`;
+        container.innerHTML = `<div class="trx-empty err">⚠️ <strong>Gagal terhubung ke server.</strong><br><span style="font-size:12px; color:#94a3b8;">Periksa koneksi, matikan ad blocker / antivirus web shield, lalu muat ulang halaman.</span></div>`;
     }
 }
 
@@ -801,29 +844,66 @@ function renderPagination(sourceData) {
 /* ============================================================
    RENDER TABEL
    ============================================================ */
+/* helper kecil */
+function esc(t) {
+    return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+const NAMA_BULAN = ["januari","februari","maret","april","mei","juni","juli","agustus","september","oktober","november","desember"];
+
+/* "25. 5 november 19:00" -> epoch ms (atau null) */
+function parseWaktuTrx(teks) {
+    const m = String(teks || "").trim().match(/^(?:(\d+)\.\s*)?(\d{1,2})\s+([a-zA-Z]+)\s+(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    const bulan = NAMA_BULAN.indexOf(m[3].toLowerCase());
+    if (bulan < 0) return null;
+    const now = new Date();
+    let d = new Date(now.getFullYear(), bulan, parseInt(m[2], 10), parseInt(m[4], 10), parseInt(m[5], 10));
+    if (d.getTime() > now.getTime() + 86400000) {
+        d = new Date(now.getFullYear() - 1, bulan, parseInt(m[2], 10), parseInt(m[4], 10), parseInt(m[5], 10));
+    }
+    return d.getTime();
+}
+
+function umurTrx(teks) {
+    const ts = parseWaktuTrx(teks);
+    if (ts === null) return null;
+    const mnt = Math.floor(Math.max(0, Date.now() - ts) / 60000);
+    const jam = Math.floor(mnt / 60);
+    const hari = Math.floor(jam / 24);
+    let label;
+    if (mnt < 60) label = "baru";
+    else if (jam < 24) label = jam + " jam";
+    else label = hari + " hari";
+    return { ts: ts, hari: hari, label: label };
+}
+
+let renderedItems = [];
+
+function renderRingkasanPending(sourceData) {
+    const el = document.getElementById("trx-summary");
+    if (!el) return;
+    if (filterMode !== "pending" || sourceData.length === 0) {
+        el.classList.add("hidden");
+        return;
+    }
+    let tertua = null;
+    sourceData.forEach(it => {
+        const u = umurTrx(it.q);
+        if (u && (tertua === null || u.ts < tertua.ts)) tertua = u;
+    });
+    el.innerHTML = `<strong>${sourceData.length}</strong> pending` + (tertua ? ` • tertua ${esc(tertua.label)}` : "") + (pendingLoading ? " • masih mencari…" : "");
+    el.classList.remove("hidden");
+}
+
 function renderBuyersList() {
     const container = document.getElementById("buyers-list");
-    const thead = document.getElementById("buyers-thead");
-    if (!container || !thead) return;
+    if (!container) return;
 
     updatePendingBadge();
 
-    if (isAdminMode) {
-        thead.innerHTML = `
-<tr>
-<th onclick="aktifkanModeAdmin()" style="cursor:pointer;">NOMOR 🔓</th>
-<th>TIPE</th>
-<th>STATUS</th>
-<th style="color:#10b981; text-align:center;">TAGIH</th>
-</tr>`;
-    } else {
-        thead.innerHTML = `
-<tr>
-<th onclick="aktifkanModeAdmin()" style="cursor:pointer;" title="Klik 2x untuk PIN Admin">NOMOR 🔒</th>
-<th>TIPE</th>
-<th>STATUS</th>
-</tr>`;
-    }
+    const lock = document.getElementById("admin-lock");
+    if (lock) lock.innerText = isAdminMode ? "🔓" : "🔒";
 
     const sourceData = getFilteredData();
     const totalLocalPages = Math.max(1, Math.ceil(sourceData.length / itemsPerPage));
@@ -831,108 +911,96 @@ function renderBuyersList() {
     if (currentPage > totalLocalPages) currentPage = totalLocalPages;
     if (currentPage < 1) currentPage = 1;
 
+    renderRingkasanPending(sourceData);
+
     /* --- tidak ada data --- */
     if (sourceData.length === 0) {
-        const colSpan = isAdminMode ? 4 : 3;
+        renderedItems = [];
         let isi;
         if (filterMode === "pending" && pendingLoading) {
-            isi = `<td colspan="${colSpan}" style="text-align:center; color:#94a3b8; padding:20px;">🔎 Mengambil semua transaksi pending (${pendingScanned} baris dicek)<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></td>`;
+            isi = `<div class="trx-empty">🔎 Mengambil semua transaksi pending (${pendingScanned} baris dicek)<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
         } else if (filterMode === "pending" && pendingError) {
-            isi = `<td colspan="${colSpan}" style="text-align:center; color:#f87171; padding:20px; line-height:1.6;">⚠️ Gagal mengambil data pending.<br><span style="font-size:12px; color:#94a3b8;">Tekan tombol PENDING sekali lagi untuk mencoba ulang.</span></td>`;
+            isi = `<div class="trx-empty err">⚠️ Gagal mengambil data pending.<br><span style="font-size:12px; color:#94a3b8;">Tekan tombol PENDING sekali lagi untuk mencoba ulang.</span></div>`;
+        } else if (filterMode === "pending") {
+            isi = `<div class="trx-empty ok">✅ HABIS — tidak ada transaksi pending</div>`;
         } else {
-            const pesan = (filterMode === "pending")
-                ? "✅ HABIS — tidak ada transaksi pending"
-                : "Belum ada transaksi";
-            isi = `<td colspan="${colSpan}" style="text-align:center; color:#10b981; padding:20px; font-weight:bold;">${pesan}</td>`;
+            isi = `<div class="trx-empty ok">Belum ada transaksi</div>`;
         }
-        container.innerHTML = `<tr>${isi}</tr>`;
+        container.innerHTML = isi;
         renderPagination(sourceData);
         return;
     }
 
-    /* --- ada data: gambar baris --- */
+    /* --- ada data: gambar kartu --- */
     const startIndex = (currentPage - 1) * itemsPerPage;
     const pageData = sourceData.slice(startIndex, startIndex + itemsPerPage);
 
-    container.innerHTML = "";
+    renderedItems = [];
+    let html = "";
 
-    pageData.forEach((item, index) => {
-        const tr = document.createElement("tr");
+    pageData.forEach(item => {
         const nomorWaAsli = item.r || "";
         const empatDigit = item.digit || "";
         const waktuRaw = item.q || "";
         const namaRaw = item.t || "HPMM";
         const rowNum = item.rowNum || "";
-
         const stableKey = (nomorWaAsli || empatDigit) + "_" + waktuRaw;
-        const keyUnik = stableKey + "_" + (startIndex + index);
-
-        let tipeRaw = String(item.v || "-");
-        if (tipeRaw.length > 10) tipeRaw = tipeRaw.substring(0, 10) + "-";
-
+        const tipeRaw = String(item.v || "-");
         const tampilanNomor = `${namaRaw.toUpperCase()} ${empatDigit}`.trim();
 
-        let currentStatus = localStatusMap[stableKey];
-        if (currentStatus === undefined) currentStatus = item.status || "Pending";
-        const isSelesai = currentStatus.toUpperCase() === "SELESAI" || currentStatus.toUpperCase() === "LUNAS";
+        const st = getStatusOfItem(item);
+        const isSelesai = (st === "SELESAI" || st === "LUNAS");
 
-        const statusHtml = `
-<select class="status-select ${isSelesai ? 'is-selesai' : ''}" onchange="ubahStatusAction(this, '${keyUnik}', '${stableKey}', '${nomorWaAsli.replace(/'/g, "\\'")}', '${waktuRaw.replace(/'/g, "\\'")}', '${rowNum}')" ${isSelesai ? 'disabled' : ''}>
-<option value="Pending" ${!isSelesai ? 'selected' : ''}>● PENDING </option>
-<option value="Selesai" ${isSelesai ? 'selected' : ''}>● SELESAI </option>
-</select>`;
+        renderedItems.push({
+            stableKey: stableKey,
+            nomorWaAsli: nomorWaAsli,
+            waktuRaw: waktuRaw,
+            rowNum: rowNum,
+            tampilan: tampilanNomor,
+            tipe: tipeRaw
+        });
+        const idx = renderedItems.length - 1;
 
-        let tdTagihHtml = "";
-        if (isAdminMode) {
-            if (!isSelesai) {
-                let bersihWA = nomorWaAsli.replace(/\D/g, '');
-                if (bersihWA.startsWith("0")) bersihWA = "62" + bersihWA.substring(1);
-                const linkWA = `https://wa.me/${bersihWA}?text=${encodeURIComponent("XX")}`;
-                tdTagihHtml = `
-<td style="text-align:center;">
-<a href="${linkWA}" target="_blank" style="display:inline-block; padding: 4px 10px; background: #25d366; color: white; text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
-💬 TAGIH
-</a>
-</td>`;
-            } else {
-                tdTagihHtml = `<td style="text-align:center; color: #10b981; font-weight: bold; font-size: 12px;">✅</td>`;
+        let umurHtml = "";
+        if (!isSelesai) {
+            const u = umurTrx(waktuRaw);
+            if (u) {
+                const kelas = u.hari >= 3 ? "kritis" : (u.hari >= 1 ? "lama" : "");
+                umurHtml = `<span class="umur ${kelas}">⏱ ${esc(u.label)}</span>`;
             }
         }
 
-        tr.innerHTML = `
-<td>
-<div class="buyer-nomor">
-<strong>${tampilanNomor}</strong>
-<span class="buyer-time">${waktuRaw || 'Baru saja'}</span>
-</div>
-</td>
-<td>${tipeRaw}</td>
-<td>${statusHtml}</td>
-${tdTagihHtml}`;
+        let aksiHtml = "";
+        if (!isSelesai) {
+            let waBtn = "";
+            if (isAdminMode && nomorWaAsli) {
+                let bersihWA = nomorWaAsli.replace(/\D/g, "");
+                if (bersihWA.startsWith("0")) bersihWA = "62" + bersihWA.substring(1);
+                const linkWA = `https://wa.me/${bersihWA}?text=${encodeURIComponent("XX")}`;
+                waBtn = `<a class="btn-wa" href="${linkWA}" target="_blank" rel="noopener" title="Tagih lewat WhatsApp">💬</a>`;
+            }
+            aksiHtml = `<div class="trx-actions"><button type="button" class="btn-lunas" onclick="bukaSheetLunas(${idx})">✓ Tandai Lunas</button>${waBtn}</div>`;
+        }
 
-        container.appendChild(tr);
+        const badge = isSelesai
+            ? `<span class="badge badge-selesai">✓ Selesai</span>`
+            : `<span class="badge badge-pending"><i class="dot"></i>Pending</span>`;
+
+        html += `
+<div class="trx-card ${isSelesai ? "selesai" : "pending"}" data-key="${esc(stableKey)}">
+<div class="trx-top"><div class="trx-name">${esc(tampilanNomor)}</div>${badge}</div>
+<div class="trx-meta"><span class="chip">${esc(tipeRaw)}</span><span class="trx-time">${esc(waktuRaw || "Baru saja")}</span>${umurHtml}</div>
+${aksiHtml}
+</div>`;
     });
 
-    /* --- info scan masih berjalan (data sudah tampil bertahap) --- */
     if (filterMode === "pending" && pendingLoading) {
-        container.insertAdjacentHTML("beforeend", `
-<tr>
-<td colspan="${isAdminMode ? 4 : 3}" style="text-align:center; color:#94a3b8; font-size:12px; padding:12px; border-bottom:none;">
-🔎 Masih mencari pending lain (${pendingScanned} baris dicek)<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
-</td>
-</tr>`);
+        html += `<div class="trx-more">🔎 Masih mencari pending lain (${pendingScanned} baris dicek)<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+    } else if (filterMode === "pending" && !canGoNext()) {
+        html += `<div class="trx-end">— HABIS —</div>`;
     }
 
-    /* --- penanda HABIS di halaman terakhir tab PENDING --- */
-    if (filterMode === "pending" && !pendingLoading && !canGoNext()) {
-        container.insertAdjacentHTML("beforeend", `
-<tr>
-<td colspan="${isAdminMode ? 4 : 3}" style="text-align:center; color:#10b981; font-weight:bold; font-size:12px; padding:14px; letter-spacing:2px; border-bottom:none;">
-— HABIS —
-</td>
-</tr>`);
-    }
-
+    container.innerHTML = html;
     renderPagination(sourceData);
 }
 
@@ -1056,51 +1124,92 @@ function simpanTransaksiKonter() {
 /* ============================================================
    UBAH STATUS PENDING → SELESAI
    ============================================================ */
-function ubahStatusAction(selectEl, keyUnik, stableKey, nomorRaw, waktuRaw, rowNum) {
-    let selectedVal = selectEl.value;
+let sheetItem = null;
+let sheetBusy = false;
+let toastTimer = null;
 
-    if (selectedVal !== "Selesai") {
-        selectEl.value = "Pending";
-        return;
-    }
+function tampilToast(pesan, isError) {
+    const el = document.getElementById("toast");
+    if (!el) return;
+    el.innerText = pesan;
+    el.classList.toggle("err", !!isError);
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
+}
 
-    let konfirmasi = confirm("Apakah BON pesanan ini sudah LUNAS? Setelah diubah ke 'Selesai', pilihan status akan dikunci.");
-    if (!konfirmasi) {
-        selectEl.value = "Pending";
-        return;
-    }
+function bukaSheetLunas(i) {
+    const it = renderedItems[i];
+    if (!it) return;
+    sheetItem = it;   // salin supaya aman walau tabel di-refresh
+    document.getElementById("sheet-nama").innerText = it.tampilan;
+    document.getElementById("sheet-jenis").innerText = it.tipe;
+    document.getElementById("sheet-waktu").innerText = it.waktuRaw || "Baru saja";
+    const u = umurTrx(it.waktuRaw);
+    const elUmur = document.getElementById("sheet-umur");
+    elUmur.innerText = u ? "⏱ " + u.label : "";
+    elUmur.className = "umur" + (u ? (u.hari >= 3 ? " kritis" : (u.hari >= 1 ? " lama" : "")) : "");
+    const btn = document.getElementById("btn-lunas-ya");
+    btn.disabled = false;
+    btn.innerText = "✓ Ya, Sudah Lunas";
+    document.getElementById("sheet-lunas").classList.add("show");
+    document.body.style.overflow = "hidden";
+}
 
-    selectEl.disabled = true;
-    selectEl.classList.add("is-selesai");
-    localStatusMap[stableKey] = "Selesai";
+function tutupSheetLunas(ev) {
+    if (ev && ev.target !== ev.currentTarget) return;   // klik di luar kartu saja
+    if (sheetBusy) return;
+    document.getElementById("sheet-lunas").classList.remove("show");
+    document.body.style.overflow = "";
+    sheetItem = null;
+}
 
-    const cleanNomor = nomorRaw ? String(nomorRaw).trim() : "";
-    const cleanWaktu = waktuRaw ? String(waktuRaw).trim() : "";
-    /* jika server sudah mengirim rowNum -> update langsung ke baris aslinya (aman di tab SEMUA maupun PENDING) */
-    const targetUrl = rowNum
-        ? `${BUYERS_URL}?action=updateStatusRow&row=${encodeURIComponent(rowNum)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`
-        : `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(keyUnik)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
+function konfirmasiLunas() {
+    if (!sheetItem || sheetBusy) return;
+    const it = sheetItem;
+    const btn = document.getElementById("btn-lunas-ya");
+    sheetBusy = true;
+    btn.disabled = true;
+    btn.innerText = "Menyimpan…";
+
+    const cleanNomor = it.nomorWaAsli ? String(it.nomorWaAsli).trim() : "";
+    const cleanWaktu = it.waktuRaw ? String(it.waktuRaw).trim() : "";
+    /* rowNum dari server -> update langsung ke baris aslinya (aman di tab SEMUA maupun PENDING) */
+    const targetUrl = it.rowNum
+        ? `${BUYERS_URL}?action=updateStatusRow&row=${encodeURIComponent(it.rowNum)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`
+        : `${BUYERS_URL}?action=updateStatus&id=${encodeURIComponent(it.stableKey)}&nomor=${encodeURIComponent(cleanNomor)}&waktu=${encodeURIComponent(cleanWaktu)}&status=Selesai`;
 
     fetch(targetUrl, { method: "GET", redirect: "follow" })
     .then(res => res.json())
     .then(data => {
+        sheetBusy = false;
         if (data.result === "success" || data.status === "success") {
-            if (filterMode === "pending") renderBuyersList();
+            localStatusMap[it.stableKey] = "Selesai";
+            tutupSheetLunas();
+            tampilToast("✓ Ditandai selesai");
+
+            const finish = () => renderBuyersList();
+            if (filterMode === "pending") {
+                const el = document.querySelector('[data-key="' + CSS.escape(it.stableKey) + '"]');
+                if (el) {
+                    el.classList.add("leaving");
+                    setTimeout(finish, 300);
+                    return;
+                }
+            }
+            finish();
         } else {
-            alert("⚠️ Transaksi tidak ditemukan atau gagal diperbarui.");
-            delete localStatusMap[stableKey];
-            selectEl.disabled = false;
-            selectEl.classList.remove("is-selesai");
-            selectEl.value = "Pending";
+            btn.disabled = false;
+            btn.innerText = "✓ Ya, Sudah Lunas";
+            tampilToast("Transaksi tidak ditemukan / gagal diperbarui", true);
         }
     })
     .catch(err => {
         console.error(err);
-        alert("⚠️ Gagal terhubung ke server.");
-        delete localStatusMap[stableKey];
-        selectEl.disabled = false;
-        selectEl.classList.remove("is-selesai");
-        selectEl.value = "Pending";
+        sheetBusy = false;
+        btn.disabled = false;
+        btn.innerText = "✓ Ya, Sudah Lunas";
+        tampilToast("Gagal terhubung ke server", true);
     });
 }
 
