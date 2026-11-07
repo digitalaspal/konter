@@ -724,7 +724,7 @@ async function scanSemuaPending(silent) {
     try {
         /* JALUR CEPAT: satu request ke server (action=getPending). Kalau server belum mendukung, lanjut scan bertahap. */
         try {
-            const resP = await fetchJsonTimeout(`${BUYERS_URL}?action=getPending&pin=${encodeURIComponent(savedPin)}`, 30000);
+            const resP = await fetchJsonTimeout(`${BUYERS_URL}?action=getPending&pin=${encodeURIComponent(savedPin)}&_=${Math.floor(Date.now() / 10000)}`, 30000);
             if (resP && resP.semua === true && Array.isArray(resP.pembeli)) {
                 isAdminMode = resP.isAdmin || isAdminMode;
                 pendingData = resP.pembeli;
@@ -796,7 +796,7 @@ function getStatusOfItem(item) {
     const stableKey = (item.r || item.digit || "") + "_" + (item.q || "");
     let status = localStatusMap[stableKey];
     if (status === undefined) status = item.status || "Pending";
-    return String(status).toUpperCase();
+    return String(status).trim().toUpperCase();
 }
 
 function isPendingItem(item) {
