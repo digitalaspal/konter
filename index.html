@@ -86,16 +86,18 @@ button:hover { background: #059669; }
 
 /* --- KARTU TRANSAKSI (mobile-first) --- */
 .trx-list { display: flex; flex-direction: column; gap: 12px; text-align: left; }
-.trx-card { display: flex; align-items: center; gap: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 14px; transition: opacity .28s ease, transform .28s ease, max-height .28s ease; max-height: 260px; overflow: hidden; }
+.trx-card { display: block; background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 14px; transition: opacity .28s ease, transform .28s ease, max-height .28s ease; max-height: 260px; overflow: hidden; }
 .trx-card.selesai { opacity: .75; }
 .trx-card.leaving { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -12px; border-width: 0; }
 .trx-left { flex: 1; min-width: 0; }
 .trx-right { display: flex; flex-direction: column; gap: 8px; flex: 0 0 118px; }
-.trx-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 6px; }
-.trx-name { font-size: 17px; font-weight: 800; color: #f8fafc; letter-spacing: .2px; }
-.pill { font-size: 11px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
-.pill-belum { background: #e11d1d; }
-.pill-lunas { background: #059669; }
+.trx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+.trx-body { display: flex; align-items: center; gap: 12px; }
+.trx-name { font-size: 17px; font-weight: 800; color: #f8fafc; letter-spacing: .2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+.badge-pending { background: rgba(245,158,11,.15); color: #fbbf24; }
+.badge-pending .dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; animation: pulse 1.5s infinite; }
+.badge-selesai { background: rgba(16,185,129,.15); color: #34d399; }
 .trx-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; margin-top: 6px; min-width: 0; }
 .trx-row svg { flex: 0 0 16px; width: 16px; height: 16px; stroke: #94a3b8; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .trx-row span { min-width: 0; }
@@ -108,7 +110,13 @@ button:hover { background: #059669; }
 .btn-outline:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
 .btn-outline:active { transform: scale(.98); }
 .btn-wa { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; box-sizing: border-box; padding: 11px 8px; font-size: 13px; font-weight: 700; border-radius: 10px; background: #16a34a; color: #fff; text-decoration: none; white-space: nowrap; }
+.btn-wa { margin: 0; border: none; cursor: pointer; }
+.btn-wa:hover { background: #15803d; }
+.btn-wa:active { transform: scale(.98); }
 .btn-wa svg { width: 18px; height: 18px; fill: #fff; stroke: none; }
+.wa-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 50vh; overflow-y: auto; text-align: left; -webkit-overflow-scrolling: touch; }
+.wa-opt { display: block; text-decoration: none; background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 11px 12px; color: #e2e8f0; font-size: 13px; line-height: 1.5; }
+.wa-opt:active { background: rgba(22,163,74,.18); border-color: #16a34a; }
 .trx-empty { text-align: center; color: #94a3b8; padding: 22px 10px; font-size: 13px; line-height: 1.6; }
 .trx-empty.ok { color: #10b981; font-weight: 700; }
 .trx-empty.err { color: #f87171; }
@@ -279,6 +287,16 @@ Berikutnya ▶
 <p class="sheet-note">Setelah diubah ke Selesai, status tidak bisa dikembalikan dari halaman ini.</p>
 <button type="button" class="sheet-btn-ya" id="btn-lunas-ya" onclick="konfirmasiLunas()">✓ Ya, Sudah Lunas</button>
 <button type="button" class="sheet-btn-batal" onclick="tutupSheetLunas()">Batal</button>
+</div>
+</div>
+<!-- BOTTOM SHEET PILIHAN PESAN PENAGIHAN -->
+<div class="sheet-overlay" id="sheet-wa" onclick="tutupSheetWA(event)">
+<div class="sheet">
+<div class="sheet-handle"></div>
+<div class="sheet-title">Pilih pesan penagihan</div>
+<p class="sheet-note" id="wa-untuk" style="margin-top:6px;">-</p>
+<div class="wa-list" id="wa-list"></div>
+<button type="button" class="sheet-btn-batal" onclick="tutupSheetWA()">Batal</button>
 </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -892,23 +910,32 @@ function formatWaktuTampil(q) {
 }
 
 function teksUmur(u) {
-    if (u.label === "baru") return "Dipesan baru saja";
-    return "Dipesan " + u.label + " yang lalu";
+    if (u.label === "baru") return "baru saja";
+    return u.label + " yang lalu";
 }
 
-/* isi kiri kartu: nama + status, kode, waktu, umur (dipakai kartu daftar & bottom sheet) */
-function infoKartuHtml(nama, tipe, waktu, u, isSelesai) {
-    const pill = isSelesai
-        ? '<span class="pill pill-lunas">Lunas</span>'
-        : '<span class="pill pill-belum">Belum Lunas</span>';
+/* baris atas kartu: nama (kiri) + status (kanan) sejajar */
+function kepalaKartuHtml(nama, isSelesai) {
+    const badge = isSelesai
+        ? '<span class="badge badge-selesai">✓ Lunas</span>'
+        : '<span class="badge badge-pending"><i class="dot"></i>Belum Lunas</span>';
+    return `<div class="trx-head"><span class="trx-name">${esc(nama)}</span>${badge}</div>`;
+}
+
+/* baris info: kode, waktu, umur */
+function barisKartuHtml(tipe, waktu, u) {
     let umurRow = "";
     if (u) {
         const kelas = u.hari >= 3 ? "kritis" : (u.hari >= 1 ? "lama" : "");
         umurRow = `<div class="trx-row ${kelas}">${IKON.jam}<span>${esc(teksUmur(u))}</span></div>`;
     }
-    return `<div class="trx-head"><span class="trx-name">${esc(nama)}</span>${pill}</div>
-<div class="trx-row">${IKON.tiket}<span>Kode: <strong>${esc(tipe)}</strong></span></div>
+    return `<div class="trx-row">${IKON.tiket}<span>Kode: <strong>${esc(tipe)}</strong></span></div>
 <div class="trx-row">${IKON.dok}<span>${esc(formatWaktuTampil(waktu))}</span></div>${umurRow}`;
+}
+
+/* gabungan (dipakai bottom sheet) */
+function infoKartuHtml(nama, tipe, waktu, u, isSelesai) {
+    return kepalaKartuHtml(nama, isSelesai) + barisKartuHtml(tipe, waktu, u);
 }
 
 let renderedItems = [];
@@ -990,7 +1017,8 @@ function renderBuyersList() {
             waktuRaw: waktuRaw,
             rowNum: rowNum,
             tampilan: tampilanNomor,
-            tipe: tipeRaw
+            tipe: tipeRaw,
+            waNomor: waNomorBersih(nomorWaAsli)
         });
         const idx = renderedItems.length - 1;
 
@@ -1000,18 +1028,18 @@ function renderBuyersList() {
         if (!isSelesai) {
             let waBtn = "";
             if (isAdminMode && nomorWaAsli) {
-                let bersihWA = nomorWaAsli.replace(/\D/g, "");
-                if (bersihWA.startsWith("0")) bersihWA = "62" + bersihWA.substring(1);
-                const linkWA = `https://wa.me/${bersihWA}?text=${encodeURIComponent("XX")}`;
-                waBtn = `<a class="btn-wa" href="${linkWA}" target="_blank" rel="noopener">${IKON.wa}Chat WA</a>`;
+                waBtn = `<button type="button" class="btn-wa" onclick="bukaSheetWA(${idx})">${IKON.wa}Chat WA</button>`;
             }
             kananHtml = `<div class="trx-right"><button type="button" class="btn-outline" onclick="bukaSheetLunas(${idx})">Tandai Lunas</button>${waBtn}</div>`;
         }
 
         html += `
 <div class="trx-card ${isSelesai ? "selesai" : "pending"}" data-key="${esc(stableKey)}">
-<div class="trx-left">${infoKartuHtml(tampilanNomor, tipeRaw, waktuRaw, u, isSelesai)}</div>
+${kepalaKartuHtml(tampilanNomor, isSelesai)}
+<div class="trx-body">
+<div class="trx-left">${barisKartuHtml(tipeRaw, waktuRaw, u)}</div>
 ${kananHtml}
+</div>
 </div>`;
     });
 
@@ -1145,6 +1173,47 @@ function simpanTransaksiKonter() {
 /* ============================================================
    UBAH STATUS PENDING → SELESAI
    ============================================================ */
+const PESAN_TAGIH = [
+    "Halo kak, mau mengingatkan {pesanan} belum lunas ya. Mohon dibantu pembayarannya, terima kasih 🙏",
+    "Permisi kak, untuk {pesanan} masih ada tagihan yang belum dibayar. Kapan kira-kira bisa dilunasi? Terima kasih.",
+    "Halo kak, maaf mengganggu. Tagihan {pesanan} masih belum lunas, mohon segera diselesaikan ya kak 🙏",
+    "Assalamualaikum kak, izin mengingatkan tagihan {pesanan} belum lunas. Terima kasih atas pengertiannya.",
+    "Halo kak, sekadar pengingat ramah: {pesanan} belum dibayar. Boleh dibantu pelunasannya hari ini? 😊",
+    "Permisi kak, {pesanan} sudah beberapa hari belum lunas. Mohon konfirmasinya ya kak, terima kasih.",
+    "Halo kak, apakah pembayaran {pesanan} sudah ditransfer? Kalau sudah, mohon kirim buktinya ya 🙏",
+    "Maaf mengganggu kak, tagihan {pesanan} masih tertunda. Bisa dilunasi hari ini atau besok? Terima kasih.",
+    "Halo kak, mohon dibantu pelunasan {pesanan} ya. Kalau ada kendala, kabari kami supaya kita cari jalan terbaik 🙏",
+    "Terima kasih sudah berbelanja di Ardaf Store kak 🙏 Mengingatkan {pesanan} masih belum lunas, mohon segera dilunasi ya."
+];
+
+function waNomorBersih(n) {
+    let b = String(n || "").replace(/\D/g, "");
+    if (!b) return "";
+    if (b.startsWith("0")) b = "62" + b.substring(1);
+    return b;
+}
+
+function bukaSheetWA(i) {
+    const it = renderedItems[i];
+    if (!it || !it.waNomor) return;
+    const pesanan = (it.tipe && it.tipe !== "-") ? "pesanan " + it.tipe : "pesanan Anda";
+    document.getElementById("wa-untuk").innerText = "Untuk: " + it.tampilan;
+    document.getElementById("wa-list").innerHTML = PESAN_TAGIH.map(t => {
+        const teks = t.replace("{pesanan}", pesanan);
+        const href = `https://wa.me/${it.waNomor}?text=${encodeURIComponent(teks)}`;
+        return `<a class="wa-opt" href="${href}" target="_blank" rel="noopener" onclick="tutupSheetWA()">${esc(teks)}</a>`;
+    }).join("");
+    document.getElementById("wa-list").scrollTop = 0;
+    document.getElementById("sheet-wa").classList.add("show");
+    document.body.style.overflow = "hidden";
+}
+
+function tutupSheetWA(ev) {
+    if (ev && ev.target !== ev.currentTarget) return;   // klik di luar kartu saja
+    document.getElementById("sheet-wa").classList.remove("show");
+    document.body.style.overflow = "";
+}
+
 let sheetItem = null;
 let sheetBusy = false;
 let toastTimer = null;
